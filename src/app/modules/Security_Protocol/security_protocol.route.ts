@@ -1,0 +1,192 @@
+import express from "express";
+import { Security_ProtocolController } from "./security_protocol.controller";
+import auth from "../../middlewares/auth";
+import { UserRole } from "@prisma/client";
+import { parseBodyData } from "../../middlewares/parseNestedJson";
+import { uploadFile } from "../../../helpars/fileUploader";
+
+const router = express.Router();
+
+// get all security guards active listing by partnerId
+router.get(
+  "/security-guards-active-listing",
+  auth(UserRole.BUSINESS_PARTNER),
+  Security_ProtocolController.getAllActiveListingSecurityGuardsByPartnerId
+);
+
+// get all security guards available by partnerId
+router.get(
+  "/security-guards-available",
+  auth(UserRole.BUSINESS_PARTNER),
+  Security_ProtocolController.getAllAvailableListingSecurityGuardsByPartnerId
+);
+
+// get all security protocols
+router.get(
+  "/",
+  // auth(
+  //   UserRole.ADMIN,
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.BUSINESS_PARTNER,
+  //   UserRole.USER
+  // ),
+  Security_ProtocolController.getAllSecurityProtocols
+);
+
+// get all security protocols security guard
+router.get(
+  "/security-guard",
+  // auth(
+  //   UserRole.ADMIN,
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.BUSINESS_PARTNER,
+  //   UserRole.USER
+  // ),
+  Security_ProtocolController.getAllSecurityProtocolsGuards
+);
+
+// get all security protocols security guard by security protocol id
+router.get(
+  "/security-guard/:securityId",
+  // auth(
+  //   UserRole.ADMIN,
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.BUSINESS_PARTNER,
+  //   UserRole.USER
+  // ),
+  Security_ProtocolController.getAllSecurityProtocolsGuardsBySecurityProtocolId
+);
+
+// get all security protocols security guard app
+router.get(
+  "/security-guard-app",
+  auth(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.BUSINESS_PARTNER,
+    UserRole.USER
+  ),
+  Security_ProtocolController.getAllSecurityProtocolsGuardsApp
+);
+
+// get all security protocols for partner
+router.get(
+  "/partner",
+  auth(UserRole.BUSINESS_PARTNER),
+  Security_ProtocolController.getAllSecurityProtocolsForPartner
+);
+
+// get all security protocols for partner security guard
+router.get(
+  "/partner-security-guard/:securityId",
+  auth(UserRole.BUSINESS_PARTNER),
+  Security_ProtocolController.getAllSecurityProtocolsForPartnerSecurityGuards
+);
+
+// get all security protocols security guard for partner
+router.get(
+  "/partner",
+  auth(UserRole.BUSINESS_PARTNER),
+  Security_ProtocolController.getAllSecurityProtocolsForPartner
+);
+
+// get popular security protocols
+router.get(
+  "/popular",
+  auth(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.BUSINESS_PARTNER,
+    UserRole.USER
+  ),
+  Security_ProtocolController.getPopularSecurityProtocols
+);
+
+// get security protocols grouped by category
+router.get(
+  "/grouped-by-category",
+  auth(UserRole.USER),
+  Security_ProtocolController.getProtocolsGroupedByCategory
+);
+
+// get security protocol by id
+router.get(
+  "/:id",
+  // auth(
+  //   UserRole.ADMIN,
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.BUSINESS_PARTNER,
+  //   UserRole.USER
+  // ),
+  Security_ProtocolController.getSingleSecurityProtocol
+);
+
+// get single security protocol security guard
+router.get(
+  "/single-security-guard/:guardId",
+  // auth(
+  //   UserRole.ADMIN,
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.BUSINESS_PARTNER,
+  //   UserRole.USER
+  // ),
+  Security_ProtocolController.getSingleSecurityProtocolGuard
+);
+
+// create security protocol
+router.post(
+  "/",
+  auth(UserRole.BUSINESS_PARTNER),
+  uploadFile.upload.fields([
+    { name: "businessLogo", maxCount: 1 },
+    { name: "securityDocs", maxCount: 5 },
+  ]),
+  parseBodyData,
+  Security_ProtocolController.createSecurityProtocol
+);
+
+// create security protocol guard type
+router.post(
+  "/security-guard-type/:securityId",
+  auth(UserRole.BUSINESS_PARTNER),
+  uploadFile.upload.fields([{ name: "securityImages", maxCount: 40 }]),
+  parseBodyData,
+  Security_ProtocolController.createSecurityProtocolGuardType
+);
+
+// update security protocol
+router.patch(
+  "/:securityId",
+  auth(UserRole.BUSINESS_PARTNER),
+  uploadFile.upload.fields([
+    { name: "businessLogo", maxCount: 1 },
+    { name: "securityDocs", maxCount: 5 },
+  ]),
+  parseBodyData,
+  Security_ProtocolController.updateSecurityProtocol
+);
+
+// update security guard type
+router.patch(
+  "/security-guard-type/:guardId",
+  auth(UserRole.BUSINESS_PARTNER),
+  uploadFile.upload.fields([{ name: "securityImages", maxCount: 40 }]),
+  parseBodyData,
+  Security_ProtocolController.updateSecurityProtocolGuardType
+);
+
+// delete security protocol
+router.delete(
+  "/:securityId",
+  auth(UserRole.BUSINESS_PARTNER),
+  Security_ProtocolController.deleteSecurityProtocol
+);
+
+// delete security guard
+router.delete(
+  "/security-guard/:guardId",
+  auth(UserRole.BUSINESS_PARTNER),
+  Security_ProtocolController.deleteSecurityProtocolGuard
+);
+
+export const securityProtocolRoute = router;
