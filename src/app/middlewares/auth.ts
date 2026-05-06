@@ -47,7 +47,10 @@ const auth = (...roles: string[]) => {
       }
 
       if (roles.length && !roles.includes(verifiedUser.role)) {
-      throw new ApiError(httpStatus.FORBIDDEN, "Forbidden!");
+        throw new ApiError(
+          httpStatus.FORBIDDEN,
+          `Forbidden! Your role '${verifiedUser.role}' does not have permission to access this resource. Required roles: ${roles.join(", ")}`
+        );
       }
 
       req.user = verifiedUser;

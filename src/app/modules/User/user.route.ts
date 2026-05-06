@@ -146,6 +146,7 @@ router.patch(
 );
 
 // delete my account
+//localhost:5005/api/v1/users/my-account
 router.patch(
   "/my-account",
   auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
@@ -160,6 +161,7 @@ router.patch(
 );
 
 // delete user
+//localhost:5005/api/v1/users/123
 router.delete(
   "/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
