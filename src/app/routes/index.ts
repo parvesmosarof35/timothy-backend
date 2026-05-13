@@ -31,6 +31,7 @@ import { refundPolicyRoute } from "../modules/Refund_Policy/refund_policy.route"
 import { newsRoomRoute } from "../modules/NewsRoom/news_room.route";
 import { advertisingRoutes } from "../modules/Advertise/advertising.route";
 import { investorRelationsRoutes } from "../modules/Investor_Relations/investor.route";
+import { SystemRoutes } from "../modules/System/system.route";
 // import { rewardsRoute } from "../modules/Fasify_Rewards/rewards.route";
 
 const router = express.Router();
@@ -160,6 +161,10 @@ const moduleRoutes = [
   {
     path: "/supports",
     route: supportRoutes,
+  },
+  {
+    path: "/system",
+    route: SystemRoutes,
   },
 ];
 

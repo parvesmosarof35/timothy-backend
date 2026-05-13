@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timothy | Server Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #38bdf8;
+            --secondary: #818cf8;
+            --accent: #f472b6;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(129, 140, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(244, 114, 182, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .brand h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-footer {
+            font-size: 0.875rem;
+            color: var(--text-dim);
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 1rem;
+        }
+
+        .info-grid {
+            grid-column: span 1;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .value {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Large card for CPU usage graph */
+        .card-large {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 768px) {
+            .card-large {
+                grid-column: span 1;
+            }
+            body {
+                padding: 1rem;
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            stroke: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <h1>TIMOTHY BACKEND</h1>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            SERVER LIVE
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- RAM Usage Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="6" y1="5" x2="6" y2="3" />
+                        <line x1="10" y1="5" x2="10" y2="3" />
+                        <line x1="14" y1="5" x2="14" y2="3" />
+                        <line x1="18" y1="5" x2="18" y2="3" />
+                    </svg>
+                    RAM USAGE
+                </div>
+            </div>
+            <div id="ram-value" class="card-value">0.00 GB</div>
+            <div class="progress-bar">
+                <div id="ram-progress" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div id="ram-info" class="card-footer">0 / 0 GB available</div>
+            <div class="chart-container">
+                <canvas id="ramChart"></canvas>
+            </div>
+        </div>
+
+        <!-- CPU / System Load Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="4" y="4" width="16" height="16" rx="2" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                    </svg>
+                    CPU LOAD (1m)
+                </div>
+            </div>
+            <div id="cpu-value" class="card-value">0.00</div>
+            <div id="cpu-info" class="card-footer">...</div>
+            <div class="chart-container">
+                <canvas id="cpuChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Node.js Heap Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    </svg>
+                    JS HEAP
+                </div>
+            </div>
+            <div id="heap-value" class="card-value">0.00 MB</div>
+            <div class="progress-bar">
+                <div id="heap-progress" class="progress-fill" style="width: 0%; background: linear-gradient(90deg, var(--secondary), var(--accent));"></div>
+            </div>
+            <div id="heap-info" class="card-footer">Heap Total: 0 MB</div>
+        </div>
+
+        <!-- System Details Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    SYSTEM DETAILS
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">OS Platform</span>
+                    <span id="os-platform" class="value">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Architecture</span>
+                    <span id="os-arch" class="value">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">CPU Cores</span>
+                    <span id="cpu-cores" class="value">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Uptime</span>
+                    <span id="sys-uptime" class="value">...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/v1/system/stats';
+        
+        // Initialize Charts
+        const ctxRam = document.getElementById('ramChart').getContext('2d');
+        const ramChart = new Chart(ctxRam, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'RAM Used (GB)',
+                    data: [],
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        const ctxCpu = document.getElementById('cpuChart').getContext('2d');
+        const cpuChart = new Chart(ctxCpu, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'CPU Load',
+                    data: [],
+                    borderColor: '#818cf8',
+                    backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        async function updateStats() {
+            try {
+                const response = await fetch(API_URL);
+                const result = await response.json();
+                if (!result.success) return;
+
+                const stats = result.data;
+
+                // Update RAM
+                document.getElementById('ram-value').innerText = stats.memory.used;
+                document.getElementById('ram-progress').style.width = stats.memory.usagePercentage;
+                document.getElementById('ram-info').innerText = `${stats.memory.used} / ${stats.memory.total} used`;
+
+                // Update CPU
+                document.getElementById('cpu-value').innerText = stats.cpu.loadAverage[0].toFixed(2);
+                document.getElementById('cpu-info').innerText = stats.cpu.model;
+
+                // Update Heap
+                document.getElementById('heap-value').innerText = stats.heap.heapUsed;
+                const heapPct = (parseFloat(stats.heap.heapUsed) / parseFloat(stats.heap.heapTotal) * 100).toFixed(2);
+                document.getElementById('heap-progress').style.width = heapPct + '%';
+                document.getElementById('heap-info').innerText = `Heap Total: ${stats.heap.heapTotal}`;
+
+                // Update System Info
+                document.getElementById('os-platform').innerText = stats.system.platform;
+                document.getElementById('os-arch').innerText = stats.system.architecture;
+                document.getElementById('cpu-cores').innerText = stats.cpu.cores;
+                document.getElementById('sys-uptime').innerText = stats.system.uptime;
+
+                // Update Charts
+                const timeLabel = new Date().toLocaleTimeString();
+                
+                // RAM Chart
+                ramChart.data.labels.push(timeLabel);
+                ramChart.data.datasets[0].data.push(parseFloat(stats.memory.used));
+                if (ramChart.data.labels.length > 20) {
+                    ramChart.data.labels.shift();
+                    ramChart.data.datasets[0].data.shift();
+                }
+                ramChart.update();
+
+                // CPU Chart
+                cpuChart.data.labels.push(timeLabel);
+                cpuChart.data.datasets[0].data.push(stats.cpu.loadAverage[0]);
+                if (cpuChart.data.labels.length > 20) {
+                    cpuChart.data.labels.shift();
+                    cpuChart.data.datasets[0].data.shift();
+                }
+                cpuChart.update();
+
+            } catch (error) {
+                console.error("Failed to fetch stats:", error);
+            }
+        }
+
+        setInterval(updateStats, 2000);
+        updateStats();
+    </script>
+</body>
+</html>

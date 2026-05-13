@@ -55,7 +55,12 @@ app.use(express.static("public"));
 app.get("/", (req: Request, res: Response) => {
   res.send({
     message: "Timothy Backend API",
+    dashboard: "/dashboard",
   });
+});
+
+app.get("/dashboard", (req: Request, res: Response) => {
+  res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
 
 // app.use("/uploads", express.static(path.join("/var/www/uploads")));
