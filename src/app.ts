@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import router from "./app/routes";
 import GlobalErrorHandler from "./app/middlewares/globalErrorHandler";
+import { requestTracker } from "./app/utils/requestTracker";
 
 declare global {
   namespace Express {
@@ -50,6 +51,20 @@ app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
+
+// Request Tracker Middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  requestTracker.recordRequest();
+  
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    const success = res.statusCode >= 200 && res.statusCode < 400;
+    requestTracker.recordResponse(duration, success);
+  });
+  
+  next();
+});
 
 // Route handler for the root endpoint
 app.get("/", (req: Request, res: Response) => {

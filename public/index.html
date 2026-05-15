@@ -260,21 +260,45 @@
             </div>
         </div>
 
-        <!-- Node.js Heap Card -->
+        <!-- Storage (ROM) Card -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        <path d="M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                        <line x1="6" y1="16" x2="6.01" y2="16" />
+                        <line x1="10" y1="16" x2="10.01" y2="16" />
                     </svg>
-                    JS HEAP
+                    SYSTEM STORAGE
                 </div>
             </div>
-            <div id="heap-value" class="card-value">0.00 MB</div>
+            <div id="storage-value" class="card-value">0.00 GB</div>
             <div class="progress-bar">
-                <div id="heap-progress" class="progress-fill" style="width: 0%; background: linear-gradient(90deg, var(--secondary), var(--accent));"></div>
+                <div id="storage-progress" class="progress-fill" style="width: 0%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></div>
             </div>
-            <div id="heap-info" class="card-footer">Heap Total: 0 MB</div>
+            <div id="storage-info" class="card-footer">0 / 0 GB used</div>
+        </div>
+
+        <!-- API Traffic Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                    API TRAFFIC
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Hits / Minute</span>
+                    <span id="hits-min" class="value" style="color: var(--primary); font-size: 1.2rem; font-weight: 700;">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Hits / Hour</span>
+                    <span id="hits-hour" class="value" style="color: var(--secondary); font-size: 1.2rem; font-weight: 700;">0</span>
+                </div>
+            </div>
         </div>
 
         <!-- System Details Card -->
@@ -286,25 +310,51 @@
                         <line x1="12" y1="16" x2="12" y2="12" />
                         <line x1="12" y1="8" x2="12.01" y2="8" />
                     </svg>
-                    SYSTEM DETAILS
+                    SYSTEM & USERS
                 </div>
             </div>
             <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Total Users</span>
+                    <span id="total-users" class="value">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Active Users</span>
+                    <span id="active-users" class="value" style="color: #4ade80;">0</span>
+                </div>
                 <div class="info-item">
                     <span class="label">OS Platform</span>
                     <span id="os-platform" class="value">...</span>
                 </div>
                 <div class="info-item">
-                    <span class="label">Architecture</span>
-                    <span id="os-arch" class="value">...</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">CPU Cores</span>
-                    <span id="cpu-cores" class="value">...</span>
-                </div>
-                <div class="info-item">
                     <span class="label">Uptime</span>
                     <span id="sys-uptime" class="value">...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Server Health Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    </svg>
+                    SERVER HEALTH
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Avg Latency</span>
+                    <span id="avg-latency" class="value" style="color: var(--accent);">0 ms</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Success Rate</span>
+                    <span id="success-rate" class="value" style="color: #4ade80;">100%</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Error Count</span>
+                    <span id="error-count" class="value" style="color: #ef4444;">0</span>
                 </div>
             </div>
         </div>
@@ -391,17 +441,25 @@
                 document.getElementById('cpu-value').innerText = stats.cpu.loadAverage[0].toFixed(2);
                 document.getElementById('cpu-info').innerText = stats.cpu.model;
 
-                // Update Heap
-                document.getElementById('heap-value').innerText = stats.heap.heapUsed;
-                const heapPct = (parseFloat(stats.heap.heapUsed) / parseFloat(stats.heap.heapTotal) * 100).toFixed(2);
-                document.getElementById('heap-progress').style.width = heapPct + '%';
-                document.getElementById('heap-info').innerText = `Heap Total: ${stats.heap.heapTotal}`;
+                // Update Storage
+                document.getElementById('storage-value').innerText = stats.storage.used;
+                document.getElementById('storage-progress').style.width = stats.storage.usagePercentage;
+                document.getElementById('storage-info').innerText = `${stats.storage.used} / ${stats.storage.total} used`;
 
-                // Update System Info
+                // Update Traffic
+                document.getElementById('hits-min').innerText = stats.traffic.hitsPerMinute;
+                document.getElementById('hits-hour').innerText = stats.traffic.hitsPerHour;
+
+                // Update Users & System Info
+                document.getElementById('total-users').innerText = stats.users.total;
+                document.getElementById('active-users').innerText = stats.users.active;
                 document.getElementById('os-platform').innerText = stats.system.platform;
-                document.getElementById('os-arch').innerText = stats.system.architecture;
-                document.getElementById('cpu-cores').innerText = stats.cpu.cores;
                 document.getElementById('sys-uptime').innerText = stats.system.uptime;
+
+                // Update Server Health
+                document.getElementById('avg-latency').innerText = stats.traffic.avgLatency;
+                document.getElementById('success-rate').innerText = stats.traffic.health.rate + '%';
+                document.getElementById('error-count').innerText = stats.traffic.health.errors;
 
                 // Update Charts
                 const timeLabel = new Date().toLocaleTimeString();
