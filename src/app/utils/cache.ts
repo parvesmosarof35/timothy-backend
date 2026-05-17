@@ -1,4 +1,5 @@
 import NodeCache from "node-cache";
+import { activityLogger } from "./activityLogger";
 
 class CacheManager {
   private cache: NodeCache;
@@ -20,10 +21,12 @@ class CacheManager {
     // Keep size calculations in sync when items expire or are manually deleted
     this.cache.on("del", (key) => {
       this.handleKeyRemoval(key);
+      activityLogger.log("CACHE_DEL", `Key removed: ${key}`);
     });
 
     this.cache.on("expired", (key) => {
       this.handleKeyRemoval(key);
+      activityLogger.log("CACHE_EXPIRE", `Key expired: ${key}`);
     });
   }
 
@@ -53,13 +56,13 @@ class CacheManager {
     this.accessOrder.push(key);
   }
 
-  /**
-   * Get an item from the cache
-   */
   public get<T>(key: string): T | undefined {
     const value = this.cache.get<T>(key);
     if (value !== undefined) {
       this.updateAccess(key);
+      activityLogger.log("CACHE_HIT", `Hit key: ${key}`);
+    } else {
+      activityLogger.log("CACHE_MISS", `Miss key: ${key}`);
     }
     return value;
   }
@@ -101,6 +104,7 @@ class CacheManager {
       this.keySizes.set(key, size);
       this.currentSizeBytes += size;
       this.updateAccess(key);
+      activityLogger.log("CACHE_SET", `Set key: ${key} (${(size / 1024).toFixed(2)} KB)`);
     }
 
     return success;

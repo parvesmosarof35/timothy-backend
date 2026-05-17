@@ -7,6 +7,8 @@ import fs from "fs/promises";
 import prisma from "../../../shared/prisma";
 import { UserStatus } from "@prisma/client";
 import { requestTracker } from "../../utils/requestTracker";
+import { cacheManager } from "../../utils/cache";
+import { activityLogger } from "../../utils/activityLogger";
 
 const getSystemStats = catchAsync(async (req: Request, res: Response) => {
   const memoryUsage = process.memoryUsage();
@@ -66,6 +68,8 @@ const getSystemStats = catchAsync(async (req: Request, res: Response) => {
       total: totalUsers,
       active: activeUsers,
     },
+    cache: cacheManager.getStats(),
+    logs: activityLogger.getLogs(),
     system: {
       uptime: (uptime / 3600).toFixed(2) + " hours",
       platform,

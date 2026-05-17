@@ -6,6 +6,7 @@ import path from "path";
 import router from "./app/routes";
 import GlobalErrorHandler from "./app/middlewares/globalErrorHandler";
 import { requestTracker } from "./app/utils/requestTracker";
+import { activityLogger } from "./app/utils/activityLogger";
 
 declare global {
   namespace Express {
@@ -61,6 +62,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     const duration = Date.now() - start;
     const success = res.statusCode >= 200 && res.statusCode < 400;
     requestTracker.recordResponse(duration, success);
+    if (req.originalUrl !== "/api/v1/system/stats") {
+      activityLogger.log("API_HIT", `${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+    }
   });
   
   next();

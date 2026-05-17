@@ -203,6 +203,10 @@
             height: 20px;
             stroke: var(--primary);
         }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -301,6 +305,60 @@
             </div>
         </div>
 
+        <!-- Cache Memory Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
+                    </svg>
+                    CACHE MEMORY
+                </div>
+            </div>
+            <div id="cache-value" class="card-value">0.00 MB</div>
+            <div class="progress-bar">
+                <div id="cache-progress" class="progress-fill" style="width: 0%; background: linear-gradient(90deg, var(--accent), var(--secondary));"></div>
+            </div>
+            <div id="cache-info" class="card-footer">0 / 0 MB used</div>
+            <div class="chart-container">
+                <canvas id="cacheChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Cache Performance Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <circle cx="12" cy="12" r="6" />
+                        <circle cx="12" cy="12" r="2" />
+                    </svg>
+                    CACHE PERFORMANCE
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Total Keys</span>
+                    <span id="cache-keys" class="value" style="color: var(--primary); font-size: 1.2rem; font-weight: 700;">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Hits (Served)</span>
+                    <span id="cache-hits" class="value" style="color: #4ade80; font-size: 1.2rem; font-weight: 700;">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Misses</span>
+                    <span id="cache-misses" class="value" style="color: #ef4444; font-size: 1.2rem; font-weight: 700;">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Hit Ratio</span>
+                    <span id="cache-ratio" class="value" style="color: var(--accent); font-size: 1.2rem; font-weight: 700;">0.00%</span>
+                </div>
+            </div>
+        </div>
+
         <!-- System Details Card -->
         <div class="card">
             <div class="card-header">
@@ -356,6 +414,38 @@
                     <span class="label">Error Count</span>
                     <span id="error-count" class="value" style="color: #ef4444;">0</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- Live Terminal logs card -->
+        <div class="card card-full-width" style="grid-column: 1 / -1; margin-top: 1rem;">
+            <div class="card-header" style="flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1rem;">
+                <div class="card-title" style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="stroke: #10b981; margin-right: 0.5rem;">
+                        <polyline points="4 17 10 11 4 5" />
+                        <line x1="12" y1="19" x2="20" y2="19" />
+                    </svg>
+                    LIVE SERVER ACTIVITY LOGS
+                    <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; margin-left: 0.5rem; box-shadow: 0 0 8px #10b981; animation: pulse 1s infinite;"></span>
+                </div>
+                <div class="log-filters" style="display: flex; gap: 1.25rem; font-size: 0.85rem; flex-wrap: wrap; align-items: center;">
+                    <span style="color: var(--text-dim); font-weight: 600;">Filter:</span>
+                    <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="filter-api" checked style="accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px;"> API Hits
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="filter-cache-hit" checked style="accent-color: #4ade80; cursor: pointer; width: 14px; height: 14px;"> Cache Hits
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="filter-cache-miss" checked style="accent-color: #fbbf24; cursor: pointer; width: 14px; height: 14px;"> Cache Misses
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="filter-cache-update" checked style="accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px;"> Cache Updates
+                    </label>
+                </div>
+            </div>
+            <div id="terminal-body" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 0.75rem; padding: 1.25rem; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; height: 280px; overflow-y: auto; color: #e2e8f0; display: flex; flex-direction: column; gap: 0.6rem; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+                <div style="color: var(--text-dim); text-align: center; margin-top: 5rem;">Waiting for server activity...</div>
             </div>
         </div>
     </div>
@@ -424,6 +514,111 @@
             }
         });
 
+        const ctxCache = document.getElementById('cacheChart').getContext('2d');
+        const cacheChart = new Chart(ctxCache, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Cache Size (MB)',
+                    data: [],
+                    borderColor: '#f472b6',
+                    backgroundColor: 'rgba(244, 114, 182, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        let latestStats = null;
+
+        function renderLogs() {
+            if (!latestStats) return;
+            const stats = latestStats;
+            const logContainer = document.getElementById('terminal-body');
+            
+            if (stats.logs && stats.logs.length > 0) {
+                const showApi = document.getElementById('filter-api').checked;
+                const showCacheHit = document.getElementById('filter-cache-hit').checked;
+                const showCacheMiss = document.getElementById('filter-cache-miss').checked;
+                const showCacheUpdate = document.getElementById('filter-cache-update').checked;
+
+                // Filter logs based on options
+                const filteredLogs = stats.logs.filter(log => {
+                    if (log.type === 'API_HIT') return showApi;
+                    if (log.type === 'CACHE_HIT') return showCacheHit;
+                    if (log.type === 'CACHE_MISS') return showCacheMiss;
+                    if (log.type === 'CACHE_SET' || log.type === 'CACHE_DEL' || log.type === 'CACHE_EXPIRE') return showCacheUpdate;
+                    return true;
+                });
+
+                if (filteredLogs.length === 0) {
+                    logContainer.innerHTML = '<div style="color: var(--text-dim); text-align: center; margin-top: 5rem; font-style: italic;">No matching logs found. Adjust filters above.</div>';
+                } else {
+                    logContainer.innerHTML = '';
+                    filteredLogs.forEach(log => {
+                        const logRow = document.createElement('div');
+                        logRow.style.display = 'flex';
+                        logRow.style.gap = '0.75rem';
+                        logRow.style.alignItems = 'flex-start';
+                        logRow.style.padding = '0.35rem 0.5rem';
+                        logRow.style.borderRadius = '0.25rem';
+                        logRow.style.borderBottom = '1px solid rgba(255, 255, 255, 0.02)';
+                        logRow.style.animation = 'fadeIn 0.25s ease-out';
+                        logRow.style.transition = 'background 0.2s';
+                        
+                        logRow.onmouseover = () => logRow.style.background = 'rgba(255, 255, 255, 0.03)';
+                        logRow.onmouseout = () => logRow.style.background = 'transparent';
+
+                        // Badges for type
+                        let badgeColor = '';
+                        let badgeBg = '';
+                        let typeText = log.type;
+                        if (log.type === 'API_HIT') {
+                            badgeColor = '#38bdf8';
+                            badgeBg = 'rgba(56, 189, 248, 0.12)';
+                            typeText = 'API';
+                        } else if (log.type === 'CACHE_HIT') {
+                            badgeColor = '#4ade80';
+                            badgeBg = 'rgba(74, 222, 128, 0.12)';
+                            typeText = 'C-HIT';
+                        } else if (log.type === 'CACHE_MISS') {
+                            badgeColor = '#fbbf24';
+                            badgeBg = 'rgba(251, 191, 36, 0.12)';
+                            typeText = 'C-MISS';
+                        } else {
+                            badgeColor = '#f472b6';
+                            badgeBg = 'rgba(244, 114, 182, 0.12)';
+                            typeText = 'C-UPD';
+                        }
+
+                        const badge = `<span style="color: ${badgeColor}; background: ${badgeBg}; border: 1px solid rgba(${badgeColor === '#38bdf8' ? '56,189,248' : badgeColor === '#4ade80' ? '74,222,128' : badgeColor === '#fbbf24' ? '251,191,36' : '244,114,182'}, 0.25); border-radius: 4px; padding: 1.5px 6px; font-size: 0.75rem; font-weight: 700; min-width: 65px; text-align: center; display: inline-block;">${typeText}</span>`;
+                        const timestampSpan = `<span style="color: var(--text-dim); font-size: 0.8rem; font-weight: 500; font-family: sans-serif;">[${log.timestamp}]</span>`;
+                        const messageSpan = `<span style="word-break: break-all; flex-grow: 1; font-family: monospace;">${log.message}</span>`;
+
+                        logRow.innerHTML = `${timestampSpan} ${badge} ${messageSpan}`;
+                        logContainer.appendChild(logRow);
+                    });
+                }
+            } else {
+                logContainer.innerHTML = '<div style="color: var(--text-dim); text-align: center; margin-top: 5rem;">Waiting for server activity...</div>';
+            }
+        }
+
         async function updateStats() {
             try {
                 const response = await fetch(API_URL);
@@ -431,6 +626,7 @@
                 if (!result.success) return;
 
                 const stats = result.data;
+                latestStats = stats;
 
                 // Update RAM
                 document.getElementById('ram-value').innerText = stats.memory.used;
@@ -449,6 +645,23 @@
                 // Update Traffic
                 document.getElementById('hits-min').innerText = stats.traffic.hitsPerMinute;
                 document.getElementById('hits-hour').innerText = stats.traffic.hitsPerHour;
+
+                // Update Cache Memory
+                const cacheUsagePercent = ((parseFloat(stats.cache.currentSizeMB) / parseFloat(stats.cache.maxSizeMB)) * 100).toFixed(2);
+                document.getElementById('cache-value').innerText = stats.cache.currentSizeMB + ' MB';
+                document.getElementById('cache-progress').style.width = cacheUsagePercent + '%';
+                document.getElementById('cache-info').innerText = `${stats.cache.currentSizeMB} / ${stats.cache.maxSizeMB} MB used`;
+
+                // Update Cache Performance
+                const cacheHits = stats.cache.hitRatio.hits;
+                const cacheMisses = stats.cache.hitRatio.misses;
+                const totalCacheReqs = cacheHits + cacheMisses;
+                const cacheRatioPercent = totalCacheReqs > 0 ? ((cacheHits / totalCacheReqs) * 100).toFixed(2) : '0.00';
+
+                document.getElementById('cache-keys').innerText = stats.cache.keys;
+                document.getElementById('cache-hits').innerText = cacheHits;
+                document.getElementById('cache-misses').innerText = cacheMisses;
+                document.getElementById('cache-ratio').innerText = cacheRatioPercent + '%';
 
                 // Update Users & System Info
                 document.getElementById('total-users').innerText = stats.users.total;
@@ -482,10 +695,27 @@
                 }
                 cpuChart.update();
 
+                // Cache Chart
+                cacheChart.data.labels.push(timeLabel);
+                cacheChart.data.datasets[0].data.push(parseFloat(stats.cache.currentSizeMB));
+                if (cacheChart.data.labels.length > 20) {
+                    cacheChart.data.labels.shift();
+                    cacheChart.data.datasets[0].data.shift();
+                }
+                cacheChart.update();
+
+                // Render Terminal logs
+                renderLogs();
+
             } catch (error) {
                 console.error("Failed to fetch stats:", error);
             }
         }
+
+        // Register immediate filter response listeners
+        document.querySelectorAll('.log-filters input').forEach(checkbox => {
+            checkbox.addEventListener('change', renderLogs);
+        });
 
         setInterval(updateStats, 2000);
         updateStats();
