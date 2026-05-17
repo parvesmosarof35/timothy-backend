@@ -7,10 +7,15 @@ import { pick } from "../../../shared/pick";
 import { filterField } from "./attraction.constant";
 import { paginationFields } from "../../../constants/pagination";
 import { getUserCurrency } from "../../../helpars/detectionLocality";
+import { cacheManager } from "../../utils/cache";
 
 // create attraction
 const createAttraction = catchAsync(async (req: Request, res: Response) => {
   const result = await AttractionService.createAttraction(req);
+  
+  // Invalidate attraction cache
+  cacheManager.delPattern("attractions:*");
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -23,6 +28,10 @@ const createAttraction = catchAsync(async (req: Request, res: Response) => {
 const createAttractionAppeal = catchAsync(
   async (req: Request, res: Response) => {
     const result = await AttractionService.createAttractionAppeal(req);
+
+    // Invalidate attraction cache
+    cacheManager.delPattern("attractions:*");
+
     sendResponse(res, {
       statusCode: httpStatus.CREATED,
       success: true,
@@ -89,11 +98,27 @@ const getAllAttractionsAppeals = catchAsync(
     const userCurrency = await getUserCurrency(req);
     const filter = pick(req.query, filterField);
     const options = pick(req.query, paginationFields);
+
+    const cacheKey = `attractions:appeals:${JSON.stringify({ filter, options, userCurrency })}`;
+    const cachedData = cacheManager.get(cacheKey);
+
+    if (cachedData) {
+      return sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Attractions fetched successfully (from cache)",
+        data: cachedData,
+      });
+    }
+
     const result = await AttractionService.getAllAttractionsAppeals(
       filter,
       options,
       userCurrency
     );
+
+    cacheManager.set(cacheKey, result);
+
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -198,6 +223,10 @@ const getSingleAttractionAppeal = catchAsync(
 // update attraction
 const updateAttraction = catchAsync(async (req: Request, res: Response) => {
   const result = await AttractionService.updateAttraction(req);
+
+  // Invalidate attraction cache
+  cacheManager.delPattern("attractions:*");
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -210,6 +239,10 @@ const updateAttraction = catchAsync(async (req: Request, res: Response) => {
 const updateAttractionAppeal = catchAsync(
   async (req: Request, res: Response) => {
     const result = await AttractionService.updateAttractionAppeal(req);
+
+    // Invalidate attraction cache
+    cacheManager.delPattern("attractions:*");
+
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -227,6 +260,10 @@ const deleteAttraction = catchAsync(async (req: Request, res: Response) => {
     attractionId,
     partnerId
   );
+
+  // Invalidate attraction cache
+  cacheManager.delPattern("attractions:*");
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -244,6 +281,10 @@ const deleteAttractionAppeal = catchAsync(
       appealId,
       partnerId
     );
+
+    // Invalidate attraction cache
+    cacheManager.delPattern("attractions:*");
+
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,

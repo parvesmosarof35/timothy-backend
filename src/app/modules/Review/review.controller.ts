@@ -3,6 +3,7 @@ import catchAsync from "../../../shared/catchAsync";
 import { ReviewService } from "./review.service";
 import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
+import { cacheManager } from "../../utils/cache";
 
 // create hotel review
 const createHotelReview = catchAsync(async (req: Request, res: Response) => {
@@ -15,6 +16,11 @@ const createHotelReview = catchAsync(async (req: Request, res: Response) => {
     rating,
     comment
   );
+
+  // Invalidate reviews and hotels cache since this affects ratings
+  cacheManager.delPattern("reviews:*");
+  cacheManager.delPattern("hotels:*");
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -34,6 +40,10 @@ const createSecurityReview = catchAsync(async (req: Request, res: Response) => {
     rating,
     comment
   );
+
+  // Invalidate reviews cache
+  cacheManager.delPattern("reviews:*");
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -53,6 +63,11 @@ const createCarReview = catchAsync(async (req: Request, res: Response) => {
     rating,
     comment
   );
+
+  // Invalidate reviews and car rentals cache since this affects car ratings
+  cacheManager.delPattern("reviews:*");
+  cacheManager.delPattern("car-rentals:*");
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -73,6 +88,11 @@ const createAttractionReview = catchAsync(
       rating,
       comment
     );
+
+    // Invalidate reviews and attractions cache since this affects attraction ratings
+    cacheManager.delPattern("reviews:*");
+    cacheManager.delPattern("attractions:*");
+
     sendResponse(res, {
       statusCode: httpStatus.CREATED,
       success: true,
@@ -84,7 +104,21 @@ const createAttractionReview = catchAsync(
 
 // get all reviews
 const getAllReviews = catchAsync(async (req: Request, res: Response) => {
+  const cacheKey = "reviews:all";
+  const cachedData = cacheManager.get(cacheKey);
+
+  if (cachedData) {
+    return sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Reviews fetched successfully (from cache)",
+      data: cachedData,
+    });
+  }
+
   const result = await ReviewService.getAllReviews();
+  cacheManager.set(cacheKey, result);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -97,7 +131,21 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
 const getAllHotelReviewsByHotelId = catchAsync(
   async (req: Request, res: Response) => {
     const hotelId = req.params.hotelId;
+    const cacheKey = `reviews:hotel:${hotelId}`;
+    const cachedData = cacheManager.get(cacheKey);
+
+    if (cachedData) {
+      return sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Reviews fetched successfully (from cache)",
+        data: cachedData,
+      });
+    }
+
     const result = await ReviewService.getAllHotelReviewsByHotelId(hotelId);
+    cacheManager.set(cacheKey, result);
+
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,

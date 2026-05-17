@@ -7,10 +7,15 @@ import { pick } from "../../../shared/pick";
 import { paginationFields } from "../../../constants/pagination";
 import { filterField } from "./hotel.constant";
 import { getUserCurrency } from "../../../helpars/detectionLocality";
+import { cacheManager } from "../../utils/cache";
 
 // create hotel
 const createHotel = catchAsync(async (req: Request, res: Response) => {
   const result = await HotelService.createHotel(req);
+
+  // Invalidate hotel cache
+  cacheManager.delPattern("hotels:*");
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -22,6 +27,10 @@ const createHotel = catchAsync(async (req: Request, res: Response) => {
 // create hotel room
 const createHotelRoom = catchAsync(async (req: Request, res: Response) => {
   const result = await HotelService.createHotelRoom(req);
+
+  // Invalidate hotel cache
+  cacheManager.delPattern("hotels:*");
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -59,11 +68,24 @@ const getAvailableRooms = catchAsync(async (req: Request, res: Response) => {
 // get all hotels
 const getAllHotels = catchAsync(async (req: Request, res: Response) => {
   const userCurrency = await getUserCurrency(req);
-  // console.log(`User currency detected: ${userCurrency}`);
-
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);
+
+  const cacheKey = `hotels:all:${JSON.stringify({ filter, options, userCurrency })}`;
+  const cachedData = cacheManager.get(cacheKey);
+
+  if (cachedData) {
+    return sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Hotels fetched successfully (from cache)",
+      data: cachedData,
+    });
+  }
+
   const result = await HotelService.getAllHotels(filter, options, userCurrency);
+
+  cacheManager.set(cacheKey, result);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -179,11 +201,26 @@ const getPopularHotels = catchAsync(async (req: Request, res: Response) => {
   const userCurrency = await getUserCurrency(req);
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);
+
+  const cacheKey = `hotels:popular:${JSON.stringify({ filter, options, userCurrency })}`;
+  const cachedData = cacheManager.get(cacheKey);
+
+  if (cachedData) {
+    return sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Popular hotels fetched successfully (from cache)",
+      data: cachedData,
+    });
+  }
+
   const result = await HotelService.getPopularHotels(
     filter,
     options,
     userCurrency
   );
+
+  cacheManager.set(cacheKey, result);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -199,6 +236,9 @@ const toggleFavorite = catchAsync(async (req: Request, res: Response) => {
   const hotelId = req.params.hotelId;
 
   const result = await HotelService.toggleFavorite(userId, hotelId);
+
+  // Invalidate hotel cache
+  cacheManager.delPattern("hotels:*");
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -223,10 +263,10 @@ const getAllFavoriteHotels = catchAsync(async (req: Request, res: Response) => {
 
 // update hotel
 const updateHotel = catchAsync(async (req: Request, res: Response) => {
-  // const hotelId = req.params.id;
-  // const partnerId = req.user?.id;
-
   const result = await HotelService.updateHotel(req);
+
+  // Invalidate hotel cache
+  cacheManager.delPattern("hotels:*");
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -238,10 +278,10 @@ const updateHotel = catchAsync(async (req: Request, res: Response) => {
 
 // update hotel room
 const updateHotelRoom = catchAsync(async (req: Request, res: Response) => {
-  // const roomId = req.params.roomId;
-  // const partnerId = req.user?.id;
-
   const result = await HotelService.updateHotelRoom(req);
+
+  // Invalidate hotel cache
+  cacheManager.delPattern("hotels:*");
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -256,6 +296,10 @@ const deleteHotel = catchAsync(async (req: Request, res: Response) => {
   const hotelId = req.params.hotelId;
   const partnerId = req.user?.id;
   const result = await HotelService.deleteHotel(hotelId, partnerId);
+
+  // Invalidate hotel cache
+  cacheManager.delPattern("hotels:*");
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -269,6 +313,10 @@ const deleteHotelRoom = catchAsync(async (req: Request, res: Response) => {
   const roomId = req.params.roomId;
   const partnerId = req.user?.id;
   const result = await HotelService.deleteHotelRoom(roomId, partnerId);
+
+  // Invalidate hotel cache
+  cacheManager.delPattern("hotels:*");
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

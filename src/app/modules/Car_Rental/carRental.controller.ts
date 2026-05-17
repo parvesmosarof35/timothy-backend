@@ -7,10 +7,14 @@ import { filterField } from "./carRental.constant";
 import { pick } from "../../../shared/pick";
 import { paginationFields } from "../../../constants/pagination";
 import { getUserCurrency } from "../../../helpars/detectionLocality";
+import { cacheManager } from "../../utils/cache";
 
 // create Car Rental
 const createCarRental = catchAsync(async (req: Request, res: Response) => {
   const result = await CarRentalService.createCarRental(req);
+
+  // Invalidate car rental cache
+  cacheManager.delPattern("car-rentals:*");
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -23,6 +27,9 @@ const createCarRental = catchAsync(async (req: Request, res: Response) => {
 // create Car
 const createCar = catchAsync(async (req: Request, res: Response) => {
   const result = await CarRentalService.createCar(req);
+
+  // Invalidate car rental cache
+  cacheManager.delPattern("car-rentals:*");
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -86,11 +93,27 @@ const getAllCarRentalsCars = catchAsync(async (req: Request, res: Response) => {
   const userCurrency = await getUserCurrency(req);
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);
+
+  const cacheKey = `car-rentals:cars:${JSON.stringify({ filter, options, userCurrency })}`;
+  const cachedData = cacheManager.get(cacheKey);
+
+  if (cachedData) {
+    return sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Car fetched successfully (from cache)",
+      data: cachedData,
+    });
+  }
+
   const result = await CarRentalService.getAllCarRentalsCars(
     filter,
     options,
     userCurrency
   );
+
+  cacheManager.set(cacheKey, result);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -187,6 +210,9 @@ const getSingleCar = catchAsync(async (req: Request, res: Response) => {
 const updateCarRental = catchAsync(async (req: Request, res: Response) => {
   const result = await CarRentalService.updateCarRental(req);
 
+  // Invalidate car rental cache
+  cacheManager.delPattern("car-rentals:*");
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -198,6 +224,9 @@ const updateCarRental = catchAsync(async (req: Request, res: Response) => {
 // update Car
 const updateCar = catchAsync(async (req: Request, res: Response) => {
   const result = await CarRentalService.updateCar(req);
+
+  // Invalidate car rental cache
+  cacheManager.delPattern("car-rentals:*");
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -212,6 +241,10 @@ const deleteCarRental = catchAsync(async (req: Request, res: Response) => {
   const partnerId = req.user?.id;
   const carRentalId = req.params.car_RentalId;
   const result = await CarRentalService.deleteCarRental(carRentalId, partnerId);
+
+  // Invalidate car rental cache
+  cacheManager.delPattern("car-rentals:*");
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -225,6 +258,10 @@ const deleteCar = catchAsync(async (req: Request, res: Response) => {
   const partnerId = req.user?.id;
   const carId = req.params.carId;
   const result = await CarRentalService.deleteCar(carId, partnerId);
+
+  // Invalidate car rental cache
+  cacheManager.delPattern("car-rentals:*");
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

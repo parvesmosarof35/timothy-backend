@@ -10,6 +10,7 @@ import { filterField } from "./user.constant";
 import { paginationFields } from "../../../constants/pagination";
 import { isValidObjectId } from "../../../utils/validateObjectId";
 import { IUploadedFile } from "../../../interfaces/file";
+import { cacheManager } from "../../utils/cache";
 
 // create user
 const createUser = catchAsync(async (req: Request, res: Response) => {
@@ -216,6 +217,9 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
 
   const result = await UserService.updateUser(userId, data, file);
 
+  // Invalidate profile cache
+  cacheManager.del(`users:profile:${userId}`);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -227,8 +231,20 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
 // get my profile
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.user;
+  const cacheKey = `users:profile:${id}`;
+  const cachedData = cacheManager.get(cacheKey);
+
+  if (cachedData) {
+    return sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "My profile retrieved successfully (from cache)",
+      data: cachedData,
+    });
+  }
 
   const result = await UserService.getMyProfile(id);
+  cacheManager.set(cacheKey, result);
 
   sendResponse(res, {
     success: true,
@@ -244,6 +260,9 @@ const updateUserProfileImage = catchAsync(
     const { id } = req.user;
     const result = await UserService.updateUserProfileImage(id, req);
 
+    // Invalidate profile cache
+    cacheManager.del(`users:profile:${id}`);
+
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
@@ -257,6 +276,11 @@ const updateUserProfileImage = catchAsync(
 const deleteMyAccount = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id;
   const result = await UserService.deleteMyAccount(userId);
+
+  // Invalidate profile cache
+  if (userId) {
+    cacheManager.del(`users:profile:${userId}`);
+  }
 
   // clear the token cookie
   res.clearCookie("token", {
@@ -279,6 +303,9 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const loggedId = req.user.id;
 
   await UserService.deleteUser(userId, loggedId);
+
+  // Invalidate deleted user's profile cache
+  cacheManager.del(`users:profile:${userId}`);
 
   sendResponse(res, {
     success: true,
