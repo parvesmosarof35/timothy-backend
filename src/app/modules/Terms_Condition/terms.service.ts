@@ -3,6 +3,24 @@ import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { ICreateTermsCondition } from "./terms.interface";
+import { cacheManager } from "../../utils/cache";
+
+// Dummy / Fallback Terms and Conditions to prevent 404 errors
+const dummyTerms: Terms_Condition = {
+  id: "dummy-terms-id",
+  title: "Terms and Conditions",
+  acceptance_terms: "Welcome to Fasifys. By accessing or using our services, you agree to be bound by these terms. If you do not agree, please do not use our services.",
+  app_purpose: "Fasifys provides a platform to connect users with various booking services, including hotels, security, cars, and attractions.",
+  user_responsibilities: "Users must provide accurate information, protect their account credentials, and comply with all applicable local, national, and international laws.",
+  data_usage: "We collect and use your data to facilitate bookings, personalize your experience, and improve our services as described in our Privacy Policy.",
+  intellectual_property: "All content, logos, trademarks, and software on Fasifys are the property of Fasifys or its licensors and are protected by intellectual property laws.",
+  limitation: "Fasifys is not liable for any indirect, incidental, special, or consequential damages arising out of or in connection with the use of our services.",
+  updates: "We reserves the right to modify these terms at any time. Changes will be posted on this page, and your continued use constitutes acceptance of the new terms.",
+  contactUS: "If you have any questions about these terms, please contact us at support@fasifys.com.",
+  adminId: "dummy-admin-id",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 // Create terms & conditions
 const createTerms = async (
@@ -42,11 +60,21 @@ const createTerms = async (
     return newTerms;
   });
 
+  // Invalidate cache
+  cacheManager.del("terms_conditions:first");
+  cacheManager.delPattern("terms_conditions:id:*");
+
   return result;
 };
 
 // get all terms
 const getTerms = async (): Promise<Omit<Terms_Condition, "adminId"> | null> => {
+  const cacheKey = "terms_conditions:first";
+  const cachedData = cacheManager.get<Omit<Terms_Condition, "adminId">>(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   const result = await prisma.terms_Condition.findFirst({
     select: {
       id: true,
@@ -65,20 +93,33 @@ const getTerms = async (): Promise<Omit<Terms_Condition, "adminId"> | null> => {
   });
 
   if (!result) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
+    const { adminId, ...termsWithoutAdmin } = dummyTerms;
+    // Cache the dummy terms for subsequent requests
+    cacheManager.set(cacheKey, termsWithoutAdmin);
+    return termsWithoutAdmin;
   }
 
+  cacheManager.set(cacheKey, result);
   return result;
 };
 
 // get single terms
 const getSingleTerms = async (id: string): Promise<Terms_Condition> => {
+  const cacheKey = `terms_conditions:id:${id}`;
+  const cachedData = cacheManager.get<Terms_Condition>(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   const result = await prisma.terms_Condition.findUnique({
     where: { id },
   });
   if (!result) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
+    const customizedDummy = { ...dummyTerms, id };
+    cacheManager.set(cacheKey, customizedDummy);
+    return customizedDummy;
   }
+  cacheManager.set(cacheKey, result);
   return result;
 };
 
@@ -124,6 +165,10 @@ const updateTermsByAdminId = async (
       updatedAt: true,
     },
   });
+
+  // Invalidate cache
+  cacheManager.del("terms_conditions:first");
+  cacheManager.del(`terms_conditions:id:${termId}`);
 
   return updatedTerms!;
 };
