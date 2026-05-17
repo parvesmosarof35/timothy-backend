@@ -332,10 +332,6 @@ const getAllMyCarBookings = async (userId: string) => {
       },
     },
   });
-  if (result.length === 0) {
-    throw new ApiError(httpStatus.NOT_FOUND, "No bookings found");
-  }
-
   return result;
 };
 

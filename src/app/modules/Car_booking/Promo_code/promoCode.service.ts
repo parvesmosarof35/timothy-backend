@@ -94,10 +94,6 @@ const getAllPromoCodes = async () => {
     },
   });
 
-  if (result.length === 0) {
-    throw new ApiError(httpStatus.NOT_FOUND, "No promo codes found");
-  }
-
   return result;
 };
 
