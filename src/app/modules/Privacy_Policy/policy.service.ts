@@ -145,13 +145,58 @@ const updatePolicyByAdminId = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
   }
 
-  const policy = await prisma.privacy_Policy.findUnique({
+  let policy = await prisma.privacy_Policy.findUnique({
     where: {
       id: policyId,
     },
   });
+
+  if (!policy && policyId === "dummy-policy-id") {
+    // If the frontend tries to update the dummy ID but a policy already exists in DB, update that one
+    const existingPolicy = await prisma.privacy_Policy.findFirst();
+    if (existingPolicy) {
+      policy = existingPolicy;
+    }
+  }
+
   if (!policy) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Privacy Policy not found");
+    // Create the policy since it does not exist in the database yet
+    const newPolicy = await prisma.privacy_Policy.create({
+      data: {
+        title: payload.title || dummyPolicy.title,
+        introduction: payload.introduction || dummyPolicy.introduction,
+        information_collect: payload.information_collect || dummyPolicy.information_collect,
+        how_useYour_data: payload.how_useYour_data || dummyPolicy.how_useYour_data,
+        data_security: payload.data_security || dummyPolicy.data_security,
+        third_party_services: payload.third_party_services || dummyPolicy.third_party_services,
+        user_control: payload.user_control || dummyPolicy.user_control,
+        children_privacy: payload.children_privacy || dummyPolicy.children_privacy,
+        changes_to_policy: payload.changes_to_policy || dummyPolicy.changes_to_policy,
+        contact_info: payload.contact_info || dummyPolicy.contact_info,
+        adminId,
+      },
+      select: {
+        id: true,
+        title: true,
+        introduction: true,
+        information_collect: true,
+        how_useYour_data: true,
+        data_security: true,
+        third_party_services: true,
+        user_control: true,
+        children_privacy: true,
+        changes_to_policy: true,
+        contact_info: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Invalidate cache
+    cacheManager.del("privacy_policies:first");
+    cacheManager.delPattern("privacy_policies:id:*");
+
+    return newPolicy;
   }
 
   const updated = await prisma.privacy_Policy.update({
@@ -176,7 +221,10 @@ const updatePolicyByAdminId = async (
 
   // Invalidate cache
   cacheManager.del("privacy_policies:first");
-  cacheManager.del(`privacy_policies:id:${policyId}`);
+  cacheManager.del(`privacy_policies:id:${policy.id}`);
+  if (policyId !== policy.id) {
+    cacheManager.del(`privacy_policies:id:${policyId}`);
+  }
 
   return updated!;
 };

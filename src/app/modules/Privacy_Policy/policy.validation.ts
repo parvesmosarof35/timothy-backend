@@ -19,7 +19,7 @@ export const createPrivacyPolicySchema = z.object({
       .nonempty("User control details are required"),
     children_privacy: z.string().min(10, "Children privacy info is required"),
     changes_to_policy: z.string().min(10, "Change policy info is required"),
-    contact_info: z.string().email("Valid contact email is required"),
+    contact_info: z.string().min(3, "Contact info is required"),
   }),
 });
 
@@ -34,7 +34,7 @@ export const updatePrivacyPolicySchema = z.object({
     user_control: z.array(z.string().min(1)).optional(),
     children_privacy: z.string().min(10).optional(),
     changes_to_policy: z.string().min(10).optional(),
-    contact_info: z.string().email().optional(),
+    contact_info: z.string().min(3).optional(),
   }),
 });
 

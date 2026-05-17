@@ -123,7 +123,6 @@ const getSingleTerms = async (id: string): Promise<Terms_Condition> => {
   return result;
 };
 
-// update terms
 const updateTermsByAdminId = async (
   adminId: string,
   termId: string,
@@ -138,17 +137,59 @@ const updateTermsByAdminId = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
   }
 
-  const result = await prisma.terms_Condition.findUnique({
+  let terms = await prisma.terms_Condition.findUnique({
     where: { id: termId },
   });
 
-  if (!result) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
+  if (!terms && termId === "dummy-terms-id") {
+    // If the frontend tries to update the dummy ID but a terms record already exists in DB, update that one
+    const existingTerms = await prisma.terms_Condition.findFirst();
+    if (existingTerms) {
+      terms = existingTerms;
+    }
+  }
+
+  if (!terms) {
+    // Create terms and conditions because they don't exist in the database yet
+    const newTerms = await prisma.terms_Condition.create({
+      data: {
+        title: payload.title || dummyTerms.title,
+        acceptance_terms: payload.acceptance_terms || dummyTerms.acceptance_terms,
+        app_purpose: payload.app_purpose || dummyTerms.app_purpose,
+        user_responsibilities: payload.user_responsibilities || dummyTerms.user_responsibilities,
+        data_usage: payload.data_usage || dummyTerms.data_usage,
+        intellectual_property: payload.intellectual_property || dummyTerms.intellectual_property,
+        limitation: payload.limitation || dummyTerms.limitation,
+        updates: payload.updates || dummyTerms.updates,
+        contactUS: payload.contactUS || dummyTerms.contactUS,
+        adminId,
+      },
+      select: {
+        id: true,
+        title: true,
+        acceptance_terms: true,
+        app_purpose: true,
+        user_responsibilities: true,
+        data_usage: true,
+        intellectual_property: true,
+        limitation: true,
+        updates: true,
+        contactUS: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Invalidate cache
+    cacheManager.del("terms_conditions:first");
+    cacheManager.delPattern("terms_conditions:id:*");
+
+    return newTerms;
   }
 
   // terms and condition updated
   const updatedTerms = await prisma.terms_Condition.update({
-    where: { id: termId },
+    where: { id: terms.id },
     data: payload,
     select: {
       id: true,
@@ -168,7 +209,10 @@ const updateTermsByAdminId = async (
 
   // Invalidate cache
   cacheManager.del("terms_conditions:first");
-  cacheManager.del(`terms_conditions:id:${termId}`);
+  cacheManager.del(`terms_conditions:id:${terms.id}`);
+  if (termId !== terms.id) {
+    cacheManager.del(`terms_conditions:id:${termId}`);
+  }
 
   return updatedTerms!;
 };

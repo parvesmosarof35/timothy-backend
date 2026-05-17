@@ -14,7 +14,7 @@ const termsConditionSchema = z.object({
       .min(10, "Intellectual property terms are required"),
     limitation: z.string().min(10, "Limitations are required"),
     updates: z.string().min(10, "Update terms are required"),
-    contactUS: z.string().email("Valid contact email required"),
+    contactUS: z.string().min(3, "Contact info is required"),
   }),
 });
 
@@ -49,7 +49,7 @@ const updateTermsConditionSchema = z.object({
       .string()
       .min(10, "Update terms must be at least 10 characters")
       .optional(),
-    contactUS: z.string().email("Valid contact email required").optional(),
+    contactUS: z.string().min(3, "Contact info must be at least 3 characters").optional(),
   }),
 });
 
