@@ -26,6 +26,7 @@ jobs:
             git reset --hard
             git pull
             pnpm install
+            pnpm prisma generate
             rm -r dist/*
             pnpm build
             pm2 restart all

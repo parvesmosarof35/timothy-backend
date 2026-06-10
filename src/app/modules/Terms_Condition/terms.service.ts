@@ -6,33 +6,38 @@ import { cacheManager } from "../../utils/cache";
 const dummyTermsContent =
   "Welcome to Fasifys. By accessing or using our services, you agree to be bound by these terms. If you do not agree, please do not use our services.";
 
-// Create or update terms & conditions
+// Create or update terms & conditions - uses raw MongoDB commands to bypass Prisma client schema validation
 const createOrUpdateTerms = async (
   adminId: string,
   payload: ICreateTermsCondition
 ): Promise<string> => {
-  // Delete ALL existing records (including any old-schema documents)
-  // and create a fresh one with the new simplified schema
-  const result = await prisma.$transaction(async (tx) => {
-    // Use raw delete to bypass schema validation on old documents
-    await (tx.terms_Condition as any).deleteMany({});
+  const now = new Date().toISOString();
 
-    const created = await tx.terms_Condition.create({
-      data: {
+  // Use raw MongoDB commands — works regardless of Prisma client schema version on server
+  await (prisma as any).$runCommandRaw({
+    delete: "terms_conditions",
+    deletes: [{ q: {}, limit: 0 }], // delete all existing documents
+  });
+
+  await (prisma as any).$runCommandRaw({
+    insert: "terms_conditions",
+    documents: [
+      {
         content: payload.content,
         adminId,
+        createdAt: { $date: now },
+        updatedAt: { $date: now },
       },
-    });
-    return created.content;
+    ],
   });
 
   // Invalidate cache
   cacheManager.del("terms_conditions:first");
 
-  return result;
+  return payload.content;
 };
 
-// Get terms and conditions - handles old-schema documents gracefully
+// Get terms and conditions - uses raw MongoDB to avoid Prisma type enforcement on old documents
 const getTerms = async (): Promise<string> => {
   const cacheKey = "terms_conditions:first";
   const cachedData = cacheManager.get<string>(cacheKey);
@@ -41,7 +46,6 @@ const getTerms = async (): Promise<string> => {
   }
 
   try {
-    // Use runCommandRaw to safely query MongoDB without Prisma type enforcement
     const raw = await (prisma as any).$runCommandRaw({
       find: "terms_conditions",
       limit: 1,
@@ -64,7 +68,6 @@ const getTerms = async (): Promise<string> => {
     cacheManager.set(cacheKey, dummyTermsContent);
     return dummyTermsContent;
   } catch {
-    // Fallback on any DB error
     return dummyTermsContent;
   }
 };

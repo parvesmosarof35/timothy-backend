@@ -6,33 +6,38 @@ import { cacheManager } from "../../utils/cache";
 const dummyPolicyContent =
   "At Fasifys, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information.";
 
-// Create or update privacy policy
+// Create or update privacy policy - uses raw MongoDB commands to bypass Prisma client schema validation
 const createOrUpdatePolicy = async (
   adminId: string,
   payload: IPrivacyPolicy
 ): Promise<string> => {
-  // Delete ALL existing records (including any old-schema documents)
-  // and create a fresh one with the new simplified schema
-  const result = await prisma.$transaction(async (tx) => {
-    // Use raw delete to bypass schema validation on old documents
-    await (tx.privacy_Policy as any).deleteMany({});
+  const now = new Date().toISOString();
 
-    const created = await tx.privacy_Policy.create({
-      data: {
+  // Use raw MongoDB commands — works regardless of Prisma client schema version on server
+  await (prisma as any).$runCommandRaw({
+    delete: "privacy_policies",
+    deletes: [{ q: {}, limit: 0 }], // delete all existing documents
+  });
+
+  await (prisma as any).$runCommandRaw({
+    insert: "privacy_policies",
+    documents: [
+      {
         content: payload.content,
         adminId,
+        createdAt: { $date: now },
+        updatedAt: { $date: now },
       },
-    });
-    return created.content;
+    ],
   });
 
   // Invalidate cache
   cacheManager.del("privacy_policies:first");
 
-  return result;
+  return payload.content;
 };
 
-// Get privacy policy - handles old-schema documents gracefully
+// Get privacy policy - uses raw MongoDB to avoid Prisma type enforcement on old documents
 const getPolicy = async (): Promise<string> => {
   const cacheKey = "privacy_policies:first";
   const cachedData = cacheManager.get<string>(cacheKey);
@@ -41,7 +46,6 @@ const getPolicy = async (): Promise<string> => {
   }
 
   try {
-    // Use runCommandRaw to safely query MongoDB without Prisma type enforcement
     const raw = await (prisma as any).$runCommandRaw({
       find: "privacy_policies",
       limit: 1,
@@ -64,7 +68,6 @@ const getPolicy = async (): Promise<string> => {
     cacheManager.set(cacheKey, dummyPolicyContent);
     return dummyPolicyContent;
   } catch {
-    // Fallback on any DB error
     return dummyPolicyContent;
   }
 };
