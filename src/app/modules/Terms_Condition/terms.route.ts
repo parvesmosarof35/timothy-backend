@@ -7,43 +7,18 @@ import { termsConditionValidation } from "./terms.validation";
 
 const router = express.Router();
 
-// get terms and conditions
+// Get terms and conditions
 router.get(
   "/",
-  auth(
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
-    UserRole.USER,
-    UserRole.BUSINESS_PARTNER
-  ),
   TermsController.getTerms
 );
 
-// create terms and conditions
+// Create or update terms and conditions
 router.post(
   "/",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(termsConditionValidation.termsConditionSchema),
-  TermsController.createTerms
-);
-
-// get single terms and conditions
-router.get(
-  "/:id",
-    auth(
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
-    UserRole.USER,
-    UserRole.BUSINESS_PARTNER
-  ),
-  TermsController.getSingleTerms
-);
-
-router.patch(
-  "/update/:id",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(termsConditionValidation.updateTermsConditionSchema),
-  TermsController.updateTerms
+  TermsController.createOrUpdateTerms
 );
 
 export const termsConditionRoute = router;

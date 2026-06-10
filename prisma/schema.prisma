@@ -822,16 +822,8 @@ model About_App {
 model Terms_Condition {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  title                 String
-  acceptance_terms      String
-  app_purpose           String
-  user_responsibilities String
-  data_usage            String
-  intellectual_property String
-  limitation            String
-  updates               String
-  contactUS             String
-  adminId               String
+  content String
+  adminId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -842,17 +834,8 @@ model Terms_Condition {
 model Privacy_Policy {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  title                String
-  introduction         String
-  information_collect  String[]
-  how_useYour_data     String[]
-  data_security        String
-  third_party_services String
-  user_control         String[]
-  children_privacy     String
-  changes_to_policy    String
-  contact_info         String
-  adminId              String
+  content String
+  adminId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
