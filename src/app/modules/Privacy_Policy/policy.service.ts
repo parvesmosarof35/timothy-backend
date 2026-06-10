@@ -3,37 +3,27 @@ import { IPrivacyPolicy } from "./policy.interface";
 import { cacheManager } from "../../utils/cache";
 
 // Dummy / Fallback Privacy Policy
-const dummyPolicyContent = "At Fasifys, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information.";
+const dummyPolicyContent =
+  "At Fasifys, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information.";
 
 // Create or update privacy policy
 const createOrUpdatePolicy = async (
   adminId: string,
   payload: IPrivacyPolicy
 ): Promise<string> => {
+  // Delete ALL existing records (including any old-schema documents)
+  // and create a fresh one with the new simplified schema
   const result = await prisma.$transaction(async (tx) => {
-    // Check if there is an existing policy entry
-    const existingPolicy = await tx.privacy_Policy.findFirst();
+    // Use raw delete to bypass schema validation on old documents
+    await (tx.privacy_Policy as any).deleteMany({});
 
-    if (existingPolicy) {
-      // Update the existing entry
-      const updated = await tx.privacy_Policy.update({
-        where: { id: existingPolicy.id },
-        data: {
-          content: payload.content,
-          adminId,
-        },
-      });
-      return updated.content;
-    } else {
-      // Create a new entry
-      const created = await tx.privacy_Policy.create({
-        data: {
-          content: payload.content,
-          adminId,
-        },
-      });
-      return created.content;
-    }
+    const created = await tx.privacy_Policy.create({
+      data: {
+        content: payload.content,
+        adminId,
+      },
+    });
+    return created.content;
   });
 
   // Invalidate cache
@@ -42,7 +32,7 @@ const createOrUpdatePolicy = async (
   return result;
 };
 
-// Get privacy policy
+// Get privacy policy - handles old-schema documents gracefully
 const getPolicy = async (): Promise<string> => {
   const cacheKey = "privacy_policies:first";
   const cachedData = cacheManager.get<string>(cacheKey);
@@ -50,16 +40,33 @@ const getPolicy = async (): Promise<string> => {
     return cachedData;
   }
 
-  const result = await prisma.privacy_Policy.findFirst();
+  try {
+    // Use runCommandRaw to safely query MongoDB without Prisma type enforcement
+    const raw = await (prisma as any).$runCommandRaw({
+      find: "privacy_policies",
+      limit: 1,
+    });
 
-  if (!result) {
-    // Cache the dummy policy for subsequent requests
+    const doc = raw?.cursor?.firstBatch?.[0];
+
+    if (!doc) {
+      cacheManager.set(cacheKey, dummyPolicyContent);
+      return dummyPolicyContent;
+    }
+
+    // If document has new 'content' field, return it directly
+    if (typeof doc.content === "string" && doc.content.length > 0) {
+      cacheManager.set(cacheKey, doc.content);
+      return doc.content;
+    }
+
+    // Document exists but is old-schema (no content field) - return dummy
     cacheManager.set(cacheKey, dummyPolicyContent);
     return dummyPolicyContent;
+  } catch {
+    // Fallback on any DB error
+    return dummyPolicyContent;
   }
-
-  cacheManager.set(cacheKey, result.content);
-  return result.content;
 };
 
 export const PrivacyServices = {

@@ -3,37 +3,27 @@ import { ICreateTermsCondition } from "./terms.interface";
 import { cacheManager } from "../../utils/cache";
 
 // Dummy / Fallback Terms and Conditions
-const dummyTermsContent = "Welcome to Fasifys. By accessing or using our services, you agree to be bound by these terms. If you do not agree, please do not use our services.";
+const dummyTermsContent =
+  "Welcome to Fasifys. By accessing or using our services, you agree to be bound by these terms. If you do not agree, please do not use our services.";
 
 // Create or update terms & conditions
 const createOrUpdateTerms = async (
   adminId: string,
   payload: ICreateTermsCondition
 ): Promise<string> => {
+  // Delete ALL existing records (including any old-schema documents)
+  // and create a fresh one with the new simplified schema
   const result = await prisma.$transaction(async (tx) => {
-    // Check if there is an existing terms & conditions entry
-    const existingTerms = await tx.terms_Condition.findFirst();
+    // Use raw delete to bypass schema validation on old documents
+    await (tx.terms_Condition as any).deleteMany({});
 
-    if (existingTerms) {
-      // Update the existing entry
-      const updated = await tx.terms_Condition.update({
-        where: { id: existingTerms.id },
-        data: {
-          content: payload.content,
-          adminId,
-        },
-      });
-      return updated.content;
-    } else {
-      // Create a new entry
-      const created = await tx.terms_Condition.create({
-        data: {
-          content: payload.content,
-          adminId,
-        },
-      });
-      return created.content;
-    }
+    const created = await tx.terms_Condition.create({
+      data: {
+        content: payload.content,
+        adminId,
+      },
+    });
+    return created.content;
   });
 
   // Invalidate cache
@@ -42,7 +32,7 @@ const createOrUpdateTerms = async (
   return result;
 };
 
-// Get terms and conditions
+// Get terms and conditions - handles old-schema documents gracefully
 const getTerms = async (): Promise<string> => {
   const cacheKey = "terms_conditions:first";
   const cachedData = cacheManager.get<string>(cacheKey);
@@ -50,16 +40,33 @@ const getTerms = async (): Promise<string> => {
     return cachedData;
   }
 
-  const result = await prisma.terms_Condition.findFirst();
+  try {
+    // Use runCommandRaw to safely query MongoDB without Prisma type enforcement
+    const raw = await (prisma as any).$runCommandRaw({
+      find: "terms_conditions",
+      limit: 1,
+    });
 
-  if (!result) {
-    // Cache the dummy terms for subsequent requests
+    const doc = raw?.cursor?.firstBatch?.[0];
+
+    if (!doc) {
+      cacheManager.set(cacheKey, dummyTermsContent);
+      return dummyTermsContent;
+    }
+
+    // If document has new 'content' field, return it directly
+    if (typeof doc.content === "string" && doc.content.length > 0) {
+      cacheManager.set(cacheKey, doc.content);
+      return doc.content;
+    }
+
+    // Document exists but is old-schema (no content field) - return dummy
     cacheManager.set(cacheKey, dummyTermsContent);
     return dummyTermsContent;
+  } catch {
+    // Fallback on any DB error
+    return dummyTermsContent;
   }
-
-  cacheManager.set(cacheKey, result.content);
-  return result.content;
 };
 
 export const TermsServices = {

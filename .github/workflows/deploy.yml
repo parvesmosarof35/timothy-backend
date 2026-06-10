@@ -23,7 +23,9 @@ jobs:
           port: 22
           script: |
             cd ~/timothy-backend
+            git reset --hard
             git pull
             pnpm install
+            rm -r dist/*
             pnpm build
             pm2 restart all
