@@ -27,6 +27,13 @@ router.post(
   PaymentController.stripeHandleWebhook
 );
 
+// verify payment stripe
+router.post(
+  "/stripe-verify-payment",
+  auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
+  PaymentController.stripeVerifyPayment
+);
+
 // cancel booking stripe
 router.post(
   "/stripe-cancel-booking/:serviceType/:bookingId",

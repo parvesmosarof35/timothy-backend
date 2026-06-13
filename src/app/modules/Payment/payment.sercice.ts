@@ -393,6 +393,9 @@ const createStripePaymentIntent = async (
     },
   });
 
+  // Start background status polling (fire and forget)
+  startPaymentVerificationPoll(userId, paymentIntent.id);
+
   return {
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
@@ -1920,6 +1923,9 @@ const createStripeCheckoutSessionWebsite = async (
     },
   });
 
+  // Start background status polling (fire and forget)
+  startPaymentVerificationPoll(userId, checkoutSession.id);
+
   return {
     checkoutUrl: checkoutSession.url,
     checkoutSessionId: checkoutSession.id,
@@ -2021,6 +2027,212 @@ const createCheckoutSessionPayStackWebsite = async (
   };
 };
 
+const verifyStripePayment = async (userId: string, id: string) => {
+  let paymentIntentId = "";
+  let sessionId = "";
+  const isCheckoutSession = id.startsWith("cs_");
+
+  let paymentIntent: Stripe.PaymentIntent;
+
+  if (isCheckoutSession) {
+    const session = await stripe.checkout.sessions.retrieve(id);
+    if (session.payment_status !== "paid") {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Payment not completed yet");
+    }
+    sessionId = session.id;
+    paymentIntentId = session.payment_intent as string;
+    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+  } else {
+    paymentIntentId = id;
+    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status !== "succeeded") {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Payment not succeeded yet");
+    }
+  }
+
+  // Find the payment record in the database using either sessionId or paymentIntentId as the sessionId
+  const payment = await prisma.payment.findFirst({
+    where: {
+      OR: [
+        { sessionId: id },
+        { sessionId: sessionId },
+        { sessionId: paymentIntentId }
+      ]
+    }
+  });
+
+  if (!payment) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Payment record not found");
+  }
+
+  // Security check: ensure payment belongs to the calling user
+  if (payment.userId !== userId) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized to verify this payment");
+  }
+
+  // If already paid, return early to prevent duplicate processing
+  if (payment.status === PaymentStatus.PAID) {
+    return { message: "Payment already verified", status: "PAID", payment };
+  }
+
+  // calculate provider received
+  let providerReceived = 0;
+  if (paymentIntent.transfer_data?.destination) {
+    const amountReceived = paymentIntent.amount_received ?? 0;
+    const applicationFee = paymentIntent.application_fee_amount ?? 0;
+    providerReceived = amountReceived - applicationFee;
+  }
+  const providerReceivedUSD = providerReceived / 100;
+
+  // Update payment to PAID
+  const updatedPayment = await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: PaymentStatus.PAID,
+      payment_intent: paymentIntentId,
+      service_fee: isCheckoutSession ? providerReceivedUSD : providerReceived,
+    },
+  });
+
+  // Update booking & service status
+  const config = serviceConfig[payment.serviceType as ServiceType];
+  if (config) {
+    const bookingId = (payment as any)[config.serviceTypeField];
+
+    // For website checkout sessions, they update totalPrice to payment.amount (which is in cents).
+    if (isCheckoutSession) {
+      await config.bookingModel.update({
+        where: { id: bookingId },
+        data: { totalPrice: payment.amount },
+      });
+    }
+
+    const booking = await config.bookingModel.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (booking) {
+      // update booking status → CONFIRMED
+      await config.bookingModel.update({
+        where: { id: booking.id },
+        data: { bookingStatus: BookingStatus.CONFIRMED },
+      });
+
+      // update service status → BOOKED
+      const serviceId = (booking as any)[config.bookingToServiceField] || (booking as any)[`${payment.serviceType.toLowerCase()}Id`];
+      if (serviceId) {
+        await config.serviceModel.update({
+          where: { id: serviceId },
+          data: { isBooked: EveryServiceStatus.BOOKED },
+        });
+
+        if (payment.serviceType === "SECURITY") {
+          await config.serviceModel.update({
+            where: { id: serviceId },
+            data: { hiredCount: { increment: 1 } },
+          });
+        }
+      }
+
+      // send notification
+      try {
+        const service = await config.serviceModel.findUnique({
+          where: { id: serviceId },
+        });
+        if (service) {
+          const notificationData: IBookingNotificationData = {
+            bookingId: booking.id,
+            userId: booking.userId,
+            partnerId: booking.partnerId,
+            serviceTypes: payment.serviceType as ServiceTypes,
+            serviceName: service[config.nameField],
+            totalPrice: booking.totalPrice,
+          };
+          await BookingNotificationService.sendBookingNotifications(notificationData);
+        }
+      } catch (error) {
+        console.error("❌ Notification sending failed:", error);
+      }
+
+      // send email
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: booking.userId },
+        });
+        if (user?.email) {
+          const subject = `🎉 Your ${payment.serviceType} booking is confirmed!`;
+          const html = `
+            <div style="font-family: Arial; padding: 20px;">
+              <h2>Hi ${user.fullName || "User"},</h2>
+              <p>Your <strong>${payment.serviceType}</strong> booking has been confirmed successfully.</p>
+              <p><b>Payment ID:</b> ${payment.id}</p>
+              <p><b>Total Paid:</b> ${payment.amount / 100} ${booking.displayCurrency || "USD"}</p>
+              <p><b>Status:</b> Confirmed ✅</p>
+              <br/>
+              <p>Thanks for booking with us!</p>
+              <p>– Team Tim</p>
+            </div>
+          `;
+          await emailSender(subject, user.email, html);
+        }
+      } catch (error) {
+        console.error("❌ Email sending failed:", error);
+      }
+    }
+  }
+
+  return { message: "Payment verified successfully", status: "PAID", payment: updatedPayment };
+};
+
+const startPaymentVerificationPoll = (userId: string, id: string, attempt: number = 1) => {
+  const delay = attempt <= 2 ? 60000 : 180000;
+
+  setTimeout(async () => {
+    try {
+      const payment = await prisma.payment.findFirst({
+        where: {
+          OR: [
+            { sessionId: id }
+          ]
+        }
+      });
+
+      if (!payment || payment.status === PaymentStatus.PAID) {
+        return;
+      }
+
+      const isCheckoutSession = id.startsWith("cs_");
+      let isPaid = false;
+
+      if (isCheckoutSession) {
+        const session = await stripe.checkout.sessions.retrieve(id);
+        if (session.payment_status === "paid") {
+          isPaid = true;
+        }
+      } else {
+        const paymentIntent = await stripe.paymentIntents.retrieve(id);
+        if (paymentIntent.status === "succeeded") {
+          isPaid = true;
+        }
+      }
+
+      if (isPaid) {
+        await verifyStripePayment(userId, id);
+        return;
+      }
+
+      if (attempt < 4) {
+        startPaymentVerificationPoll(userId, id, attempt + 1);
+      }
+    } catch (error) {
+      console.error(`[PaymentPoll] Error on attempt ${attempt} for ID ${id}:`, error);
+      if (attempt < 4) {
+        startPaymentVerificationPoll(userId, id, attempt + 1);
+      }
+    }
+  }, delay);
+};
+
 export const PaymentService = {
   stripeAccountOnboarding,
   createStripePaymentIntent,
@@ -2037,4 +2249,5 @@ export const PaymentService = {
   getMyTransactions,
   createStripeCheckoutSessionWebsite,
   createCheckoutSessionPayStackWebsite,
+  verifyStripePayment,
 };

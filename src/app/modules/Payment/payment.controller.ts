@@ -314,6 +314,24 @@ const createCheckoutSessionPayStackWebsite = catchAsync(
   }
 );
 
+const stripeVerifyPayment = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const { id } = req.body;
+
+  if (!id) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Payment ID is required");
+  }
+
+  const result = await PaymentService.verifyStripePayment(userId, id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment verified successfully",
+    data: result,
+  });
+});
+
 export const PaymentController = {
   stripeAccountOnboarding,
   createStripePaymentIntent,
@@ -330,4 +348,5 @@ export const PaymentController = {
   getMyTransactions,
   createStripeCheckoutSessionWebsite,
   createCheckoutSessionPayStackWebsite,
+  stripeVerifyPayment,
 };
