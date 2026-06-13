@@ -6,6 +6,10 @@ export type IGenericResponse<T> = {
     page: number;
     limit: number;
     total: number;
+    totalPages?: number;
+    hasPreviousPage?: boolean;
+    hasPriviousPage?: boolean;
+    hasNextPage?: boolean;
   };
   data: T;
 };
