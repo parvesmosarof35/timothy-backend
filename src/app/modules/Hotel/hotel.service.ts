@@ -12,6 +12,7 @@ import {
 } from "@prisma/client";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
+import { IGenericResponse } from "../../../interfaces/common";
 import { IHotelFilterRequest } from "./hotel.interface";
 import {
   numericFields,
@@ -1092,7 +1093,7 @@ const getPopularHotels = async (
   params: IHotelFilterRequest,
   options: IPaginationOptions,
   userCurrency: string = "USD"
-): Promise<Hotel[]> => {
+): Promise<IGenericResponse<any[]>> => {
   const { searchTerm, ...filterData } = params;
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -1174,12 +1175,20 @@ const getPopularHotels = async (
       };
     });
 
-  // Sort by average rating and take top 4
+  // Sort by average rating and apply pagination
+  const total = hotelsWithAverages.length;
   const sortedHotels = hotelsWithAverages
     .sort((a, b) => b.averageRating - a.averageRating)
-    .slice(0, 4);
+    .slice(skip, skip + limit);
 
-  return sortedHotels;
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: sortedHotels,
+  };
 };
 
 // add favorite hotel
