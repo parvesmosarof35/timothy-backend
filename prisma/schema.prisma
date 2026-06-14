@@ -843,6 +843,19 @@ model Privacy_Policy {
   @@map("privacy_policies")
 }
 
+model About_Us {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  content String
+  adminId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("about_us")
+}
+
+
 model Advertise {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
