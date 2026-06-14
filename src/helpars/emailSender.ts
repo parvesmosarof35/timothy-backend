@@ -4,16 +4,14 @@ import ApiError from "../errors/ApiErrors";
 
 const emailSender = async (subject: string, email: string, html: string) => {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    host: "smtp.zoho.com",
+    port: 465,
+    secure: true, // SSL port 465 এর জন্য true
     auth: {
       user: config.emailSender.email,
       pass: config.emailSender.app_pass,
     },
   });
-// 
   const emailTransport = transporter;
 
   const mailOptions = {
