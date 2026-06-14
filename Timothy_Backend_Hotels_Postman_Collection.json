@@ -1,0 +1,1315 @@
+{
+	"info": {
+		"_postman_id": "4b68e9e6-f5b1-4171-8bc6-370591f48651",
+		"name": "Timothy Backend - Hotels & Security API",
+		"description": "Postman Collection for integrating the Hotels, Rooms, and Security Protocols & Guards APIs in the Timothy Backend project. Pre-configured for partner and user authentications without Bearer prefixes.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth (For Testing Tokens)",
+			"item": [
+				{
+					"name": "Login (To get Partner/User token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"partner@test.com\",\n    \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Log in with either a USER or BUSINESS_PARTNER account to retrieve the JWT token and set the respective collection variables."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Hotels",
+			"item": [
+				{
+					"name": "Create Hotel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"hotelBusinessName\": \"Timothy Grand Plaza Hotel\",\n    \"hotelName\": \"Timothy Grand Plaza\",\n    \"hotelBusinessType\": \"Resort\",\n    \"hotelRegNum\": \"REG-1029384\",\n    \"hotelRegDate\": \"2026-01-15\",\n    \"hotelPhone\": \"+1-555-0199\",\n    \"hotelEmail\": \"grandplaza@timothy.com\",\n    \"businessTagline\": \"Luxury redefined in the heart of the city\",\n    \"businessDescription\": \"Timothy Grand Plaza is a five-star luxury hotel offering premium accommodation, pool, gym, and full front desk services.\",\n    \"hotelBookingCondition\": \"Non-refundable after 24 hours prior to check-in\",\n    \"hotelCancelationPolicy\": \"100% refund if cancelled 48 hours in advance\",\n    \"hotelLate\": 40.7128,\n    \"hotelLong\": -74.0060,\n    \"hotelAddress\": \"123 Luxury Lane, Manhattan\",\n    \"hotelCity\": \"New York\",\n    \"hotelPostalCode\": \"10001\",\n    \"hotelDistrict\": \"Manhattan\",\n    \"hotelCountry\": \"United States\",\n    \"hotelAC\": true,\n    \"hotelParking\": true,\n    \"hoitelWifi\": true,\n    \"hotelBreakfast\": true,\n    \"hotelPool\": true,\n    \"hotelSmoking\": false,\n    \"hotelTv\": true,\n    \"hotelWashing\": true,\n    \"hotelAccommodationType\": \"Hotel\",\n    \"hotelKitchen\": false,\n    \"hotelRestaurant\": true,\n    \"hotelGym\": true,\n    \"hotelSpa\": true,\n    \"hotel24HourFrontDesk\": true,\n    \"hotelAirportShuttle\": true,\n    \"hotelNoSmokingPreference\": true,\n    \"hotelNoNSmoking\": true,\n    \"hotelPetsAllowed\": false,\n    \"hotelNoPetsPreferences\": true,\n    \"hotelPetsNotAllowed\": true,\n    \"hotelLocationFeatureWaterView\": false,\n    \"hotelLocationFeatureIsland\": false,\n    \"hotelCoffeeBar\": true\n}",
+									"description": "Contains stringified JSON holding all text and boolean metadata fields for the hotel.",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Upload a single business logo image (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 1.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "hotelDocs",
+									"description": "Upload up to 5 business registration/hotel documentation files (MIME: PDF, DOCX, etc.). MaxCount: 5.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/hotels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels"
+							]
+						},
+						"description": "Creates a new Hotel profile. Requires BUSINESS_PARTNER role. The partner user must not provide any other services already (Security, Car, or Attraction). Sets `isHotel` to true on successful creation."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Hotel",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"hotelName\": \"Timothy Grand Plaza (Renovated)\",\n    \"businessTagline\": \"Elegant luxury in New York\",\n    \"hotelPool\": true,\n    \"hotelSpa\": true\n}",
+									"description": "Pass fields inside this JSON structure to selectively update them.",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Optionally upload a new logo to replace the current one.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "hotelDocs",
+									"description": "Optionally upload new documents to append or replace current documents.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/hotels/:hotelId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1",
+									"description": "The ID of the hotel to be updated."
+								}
+							]
+						},
+						"description": "Updates an existing Hotel profile. Requires BUSINESS_PARTNER role and must be owned by the authenticated partner."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Hotels (With Filter & Paginate)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/hotels?searchTerm=Timothy&hotelCity=New York&hotelCountry=United States&minPrice=50&maxPrice=500&hotelBreakfast=true&hoitelWifi=true&page=1&limit=10&sortBy=price&sortOrder=asc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "Timothy",
+									"description": "Searches inside hotelName, hotelCity, hotelCountry"
+								},
+								{
+									"key": "hotelCity",
+									"value": "New York"
+								},
+								{
+									"key": "hotelCountry",
+									"value": "United States"
+								},
+								{
+									"key": "minPrice",
+									"value": "50",
+									"description": "Filters by minimum room price"
+								},
+								{
+									"key": "maxPrice",
+									"value": "500",
+									"description": "Filters by maximum room price"
+								},
+								{
+									"key": "hotelBreakfast",
+									"value": "true"
+								},
+								{
+									"key": "hoitelWifi",
+									"value": "true"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "price",
+									"description": "Can be price or any schema field"
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc",
+									"description": "asc | desc"
+								}
+							]
+						},
+						"description": "Public API to retrieve all hotels with filters, pagination, and currency calculations based on requester locality."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Hotel",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/:hotelId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1"
+								}
+							]
+						},
+						"description": "Public API to retrieve a single hotel profile by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Partner Hotels",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/partner-hotels?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"partner-hotels"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns list of hotels belonging to the authenticated BUSINESS_PARTNER."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Hotel",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/:hotelId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1"
+								}
+							]
+						},
+						"description": "Deletes a hotel by ID. Must be owned by the authenticated partner user."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rooms",
+			"item": [
+				{
+					"name": "Create Room",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"hotelRoomType\": \"Deluxe King Suite\",\n    \"hotelRoomDescription\": \"A spacious suite featuring a king-size bed, private balcony, ocean view, and premium workspace.\",\n    \"hotelRoomCapacity\": \"2 Adults, 1 Child\",\n    \"hotelNumberOfRooms\": 5,\n    \"hotelNumAdults\": 2,\n    \"hotelNumChildren\": 1,\n    \"hotelRoomPriceNight\": 150.00,\n    \"category\": \"Luxury\",\n    \"discount\": 15,\n    \"currency\": \"USD\"\n}",
+									"description": "Contains metadata fields for the hotel room.",
+									"type": "text"
+								},
+								{
+									"key": "hotelRoomImages",
+									"description": "Upload multiple room images (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 40.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "hotelImages",
+									"description": "Upload multiple hotel reference images for the room. MaxCount: 40.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/hotels/room/:hotelId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"room",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1",
+									"description": "The ID of the hotel this room belongs to."
+								}
+							]
+						},
+						"description": "Creates a new Room for a specific hotel. Requires BUSINESS_PARTNER role. Relies on parameter `hotelId`. Parses and defaults missing fields securely."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Room",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"hotelRoomType\": \"Deluxe King Suite (Ocean View)\",\n    \"hotelRoomPriceNight\": 175.00,\n    \"discount\": 20\n}",
+									"description": "Modify individual fields in the room.",
+									"type": "text"
+								},
+								{
+									"key": "hotelRoomImages",
+									"description": "Upload new images to update/append to the room's image array.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "hotelImages",
+									"description": "Upload new reference hotel images for the room.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/hotels/room/:roomId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"room",
+								":roomId"
+							],
+							"variable": [
+								{
+									"key": "roomId",
+									"value": "666dc10c132e4d0012bcdef5",
+									"description": "The ID of the room to update."
+								}
+							]
+						},
+						"description": "Updates an existing room. Requires BUSINESS_PARTNER role and ownership of the room."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Hotel Rooms",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/rooms?searchTerm=Deluxe&minPrice=100&maxPrice=300&page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"rooms"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "Deluxe"
+								},
+								{
+									"key": "minPrice",
+									"value": "100"
+								},
+								{
+									"key": "maxPrice",
+									"value": "300"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Public API to retrieve all rooms matching search filters and pagination."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Rooms by Hotel ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/rooms/:hotelId?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"rooms",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1"
+								}
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Public API to get all rooms registered under a specific hotel ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Room",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/room/:roomId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"room",
+								":roomId"
+							],
+							"variable": [
+								{
+									"key": "roomId",
+									"value": "666dc10c132e4d0012bcdef5"
+								}
+							]
+						},
+						"description": "Public API to retrieve a single room by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Partner Rooms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/partner-rooms/:hotelId?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"partner-rooms",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1"
+								}
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns all rooms belonging to a specific hotel owned by the authenticated BUSINESS_PARTNER."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Room Listings (Partner)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/room-active-listing?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"room-active-listing"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns room active listings for the authenticated partner."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Available Rooms (Partner)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/available-rooms?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"available-rooms"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns available (unbooked) rooms registered by the authenticated partner."
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Favorite Hotel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/favorite/:hotelId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"favorite",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1"
+								}
+							]
+						},
+						"description": "Adds or removes a hotel from the authenticated USER's favorites."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Favorites",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/my-favorites",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"my-favorites"
+							]
+						},
+						"description": "Returns lists of favorited hotels for the authenticated USER."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Room",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/hotels/room/:roomId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								"room",
+								":roomId"
+							],
+							"variable": [
+								{
+									"key": "roomId",
+									"value": "666dc10c132e4d0012bcdef5"
+								}
+							]
+						},
+						"description": "Deletes a room by its ID. Requires BUSINESS_PARTNER role and must own the room."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Security",
+			"item": [
+				{
+					"name": "Create Security Protocol",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityBusinessName\": \"Timothy Guard Services Ltd\",\n    \"securityName\": \"Timothy Guard Services\",\n    \"securityBusinessType\": \"Private Security Agency\",\n    \"securityRegNum\": \"SEC-9988776\",\n    \"securityRegDate\": \"2026-02-10\",\n    \"securityPhone\": \"+1-555-9080\",\n    \"securityEmail\": \"guards@timothysecurity.com\",\n    \"securityTagline\": \"Your ultimate protection partner\",\n    \"securityProtocolDescription\": \"Providing premium armed and unarmed security guard services, security consulting, and VIP protection.\",\n    \"securityProtocolType\": \"Physical Protection\",\n    \"securityBookingCondition\": \"24 hours notice required for dispatch\",\n    \"securityCancelationPolicy\": \"Free cancellation up to 12 hours before schedule\"\n}",
+									"description": "Contains metadata fields for the security protocol.",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Upload a single business logo image (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 1.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "securityDocs",
+									"description": "Upload up to 5 license/documentation files (MIME: PDF, DOCX, ZIP, etc.). MaxCount: 5.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols"
+							]
+						},
+						"description": "Creates a new Security Protocol profile. Requires BUSINESS_PARTNER role. The partner user must not provide any other services already (Hotel, Car, or Attraction). Sets `isSecurity` to true on successful creation."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Security Guard Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityGuardName\": \"Armed VIP Bodyguard\",\n    \"securityAddress\": \"45 Protection Blvd\",\n    \"securityCity\": \"Los Angeles\",\n    \"securityPostalCode\": \"90001\",\n    \"securityDistrict\": \"Los Angeles County\",\n    \"securityCountry\": \"United States\",\n    \"securityGuardDescription\": \"Certified armed bodyguard experienced in executive protection and crowd control.\",\n    \"securityServicesOffered\": \"VIP Protection, Escort, Threat Assessment\",\n    \"experience\": 5,\n    \"availability\": \"24/7\",\n    \"languages\": \"English, Spanish\",\n    \"certification\": \"State Guard Card, Firearms Permit\",\n    \"securityPriceDay\": 250.00,\n    \"category\": \"VIP\",\n    \"discount\": 10,\n    \"securityBookingAbleDays\": \"Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday\",\n    \"currency\": \"USD\"\n}",
+									"description": "Metadata for the Security Guard type.",
+									"type": "text"
+								},
+								{
+									"key": "securityImages",
+									"description": "Upload multiple guard reference/action images (MIME: JPEG, PNG, etc.). MaxCount: 40.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guard-type/:securityId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guard-type",
+								":securityId"
+							],
+							"variable": [
+								{
+									"key": "securityId",
+									"value": "666dc99a132e4d0012bcdef9",
+									"description": "The ID of the security protocol this guard type belongs to."
+								}
+							]
+						},
+						"description": "Creates a new Security Guard Type under a specific Security Protocol. Requires BUSINESS_PARTNER role. Parses comma-separated values (services, languages, able-days) and safely handles default parameters."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Security Protocol",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityName\": \"Timothy Tactical Guard Services\",\n    \"securityTagline\": \"Top tier security and peace of mind\"\n}",
+									"description": "Modify individual fields of the protocol.",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Optionally upload a new logo to replace the current one.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "securityDocs",
+									"description": "Optionally upload new docs.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/:securityId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								":securityId"
+							],
+							"variable": [
+								{
+									"key": "securityId",
+									"value": "666dc99a132e4d0012bcdef9"
+								}
+							]
+						},
+						"description": "Updates an existing Security Protocol profile. Requires BUSINESS_PARTNER role and must own the protocol."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Security Guard Type",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityGuardName\": \"Armed VIP Bodyguard (Senior Tier)\",\n    \"securityPriceDay\": 280.00,\n    \"experience\": 7\n}",
+									"description": "Modify guard details.",
+									"type": "text"
+								},
+								{
+									"key": "securityImages",
+									"description": "Optionally upload new images to append.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guard-type/:guardId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guard-type",
+								":guardId"
+							],
+							"variable": [
+								{
+									"key": "guardId",
+									"value": "666dcc5b132e4d0012bcdefa"
+								}
+							]
+						},
+						"description": "Updates an existing Security Guard. Requires BUSINESS_PARTNER role and must own the guard profile."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Security Protocols",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols?searchTerm=Tactical&page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "Tactical"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Public API to retrieve all protocols that contain guards, with filters and pagination."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Security Guards",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guard?searchTerm=Armed&page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guard"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "Armed"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Public API to retrieve all security guards matching query criteria."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Security Guards by Protocol ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guard/:securityId?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guard",
+								":securityId"
+							],
+							"variable": [
+								{
+									"key": "securityId",
+									"value": "666dc99a132e4d0012bcdef9"
+								}
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Public API to get all guards belonging to a specific security protocol."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Partner Security Protocols",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/partner?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"partner"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns security protocols belonging to the authenticated BUSINESS_PARTNER."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Partner Security Guards",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/partner-security-guard/:securityId?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"partner-security-guard",
+								":securityId"
+							],
+							"variable": [
+								{
+									"key": "securityId",
+									"value": "666dc99a132e4d0012bcdef9"
+								}
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns all guards belonging to a security protocol owned by the authenticated BUSINESS_PARTNER."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Security Guards Active Listing (Partner)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guards-active-listing?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guards-active-listing"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns active listings of security guards belonging to the authenticated partner."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Available Security Guards (Partner)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guards-available?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guards-available"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Returns available (unbooked) security guards belonging to the authenticated partner."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Security Protocol",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "666dc99a132e4d0012bcdef9"
+								}
+							]
+						},
+						"description": "Public API to retrieve a single security protocol by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Security Guard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/single-security-guard/:guardId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"single-security-guard",
+								":guardId"
+							],
+							"variable": [
+								{
+									"key": "guardId",
+									"value": "666dcc5b132e4d0012bcdefa"
+								}
+							]
+						},
+						"description": "Public API to retrieve a single security guard by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Security Protocol",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/:securityId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								":securityId"
+							],
+							"variable": [
+								{
+									"key": "securityId",
+									"value": "666dc99a132e4d0012bcdef9"
+								}
+							]
+						},
+						"description": "Deletes a security protocol by ID. Must be owned by the authenticated partner user."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Security Guard",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guard/:guardId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guard",
+								":guardId"
+							],
+							"variable": [
+								{
+									"key": "guardId",
+									"value": "666dcc5b132e4d0012bcdefa"
+								}
+							]
+						},
+						"description": "Deletes a security guard by ID. Must be owned by the authenticated partner user."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5005/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "partnerToken",
+			"value": "YOUR_PARTNER_JWT_TOKEN",
+			"type": "string"
+		},
+		{
+			"key": "userToken",
+			"value": "YOUR_USER_JWT_TOKEN",
+			"type": "string"
+		}
+	]
+}

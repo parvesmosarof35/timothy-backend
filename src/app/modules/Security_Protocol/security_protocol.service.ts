@@ -187,12 +187,12 @@ const createSecurityProtocolGuardType = async (req: Request) => {
       // securityProtocolType,
       securityGuardDescription,
       securityServicesOffered: parsedServices,
-      experience: parseInt(experience),
+      experience: experience ? parseInt(experience) : 0,
       availability,
       languages: language,
       certification,
       securityRating: securityRating ? securityRating : "0",
-      securityPriceDay: parseFloat(securityPriceDay),
+      securityPriceDay: securityPriceDay ? parseFloat(securityPriceDay) : 0,
       securityImages: securityImageUrls,
       category: category || undefined,
       discount: discount ? parseFloat(discount) : 0,
@@ -203,7 +203,7 @@ const createSecurityProtocolGuardType = async (req: Request) => {
       securityBookingAbleDays: securityBookingAbleDay,
       securityId: findSecurityProtocol.id,
       partnerId: findSecurityProtocol.partnerId,
-      currency: currency.toUpperCase(),
+      currency: currency ? currency.toUpperCase() : "USD",
     },
   });
 

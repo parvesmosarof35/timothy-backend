@@ -246,9 +246,9 @@ const createHotelRoom = async (req: Request) => {
       // hotelDistrict,
       // hotelCountry,
       hotelRoomCapacity,
-      hotelNumberOfRooms: parseInt(hotelNumberOfRooms),
-      hotelNumAdults: parseInt(hotelNumAdults),
-      hotelNumChildren: parseInt(hotelNumChildren),
+      hotelNumberOfRooms: hotelNumberOfRooms ? parseInt(hotelNumberOfRooms) : 1,
+      hotelNumAdults: hotelNumAdults ? parseInt(hotelNumAdults) : 1,
+      hotelNumChildren: hotelNumChildren ? parseInt(hotelNumChildren) : 1,
       hotelRating: hotelRating ? hotelRating : "0",
       hotelRoomPriceNight: hotelRoomPriceNight
         ? parseFloat(hotelRoomPriceNight)
@@ -261,7 +261,7 @@ const createHotelRoom = async (req: Request) => {
       hotelImages: hotelRoomUrls,
       hotelId: hotelId,
       partnerId: partnerExists.id,
-      currency: currency.toUpperCase(),
+      currency: currency ? currency.toUpperCase() : "USD",
     },
   });
 
@@ -1400,29 +1400,29 @@ const updateHotel = async (req: Request) => {
       hotelPostalCode,
       hotelDistrict,
       hotelCountry,
-      hotelAC: Boolean(hotelAC),
-      hotelParking: Boolean(hotelParking),
-      hoitelWifi: Boolean(hoitelWifi),
-      hotelBreakfast: Boolean(hotelBreakfast),
-      hotelPool: Boolean(hotelPool),
-      hotelSmoking: Boolean(hotelSmoking),
-      hotelTv: Boolean(hotelTv),
-      hotelWashing: Boolean(hotelWashing),
+      hotelAC: hotelAC !== undefined ? Boolean(hotelAC) : undefined,
+      hotelParking: hotelParking !== undefined ? Boolean(hotelParking) : undefined,
+      hoitelWifi: hoitelWifi !== undefined ? Boolean(hoitelWifi) : undefined,
+      hotelBreakfast: hotelBreakfast !== undefined ? Boolean(hotelBreakfast) : undefined,
+      hotelPool: hotelPool !== undefined ? Boolean(hotelPool) : undefined,
+      hotelSmoking: hotelSmoking !== undefined ? Boolean(hotelSmoking) : undefined,
+      hotelTv: hotelTv !== undefined ? Boolean(hotelTv) : undefined,
+      hotelWashing: hotelWashing !== undefined ? Boolean(hotelWashing) : undefined,
       hotelAccommodationType,
-      hotelKitchen: Boolean(hotelKitchen),
-      hotelRestaurant: Boolean(hotelRestaurant),
-      hotelGym: Boolean(hotelGym),
-      hotelSpa: Boolean(hotelSpa),
-      hotel24HourFrontDesk: Boolean(hotel24HourFrontDesk),
-      hotelAirportShuttle: Boolean(hotelAirportShuttle),
-      hotelNoSmokingPreference: Boolean(hotelNoSmokingPreference),
-      hotelNoNSmoking: Boolean(hotelNoNSmoking),
-      hotelPetsAllowed: Boolean(hotelPetsAllowed),
-      hotelNoPetsPreferences: Boolean(hotelNoPetsPreferences),
-      hotelPetsNotAllowed: Boolean(hotelPetsNotAllowed),
-      hotelLocationFeatureWaterView: Boolean(hotelLocationFeatureWaterView),
-      hotelLocationFeatureIsland: Boolean(hotelLocationFeatureIsland),
-      hotelCoffeeBar: Boolean(hotelCoffeeBar),
+      hotelKitchen: hotelKitchen !== undefined ? Boolean(hotelKitchen) : undefined,
+      hotelRestaurant: hotelRestaurant !== undefined ? Boolean(hotelRestaurant) : undefined,
+      hotelGym: hotelGym !== undefined ? Boolean(hotelGym) : undefined,
+      hotelSpa: hotelSpa !== undefined ? Boolean(hotelSpa) : undefined,
+      hotel24HourFrontDesk: hotel24HourFrontDesk !== undefined ? Boolean(hotel24HourFrontDesk) : undefined,
+      hotelAirportShuttle: hotelAirportShuttle !== undefined ? Boolean(hotelAirportShuttle) : undefined,
+      hotelNoSmokingPreference: hotelNoSmokingPreference !== undefined ? Boolean(hotelNoSmokingPreference) : undefined,
+      hotelNoNSmoking: hotelNoNSmoking !== undefined ? Boolean(hotelNoNSmoking) : undefined,
+      hotelPetsAllowed: hotelPetsAllowed !== undefined ? Boolean(hotelPetsAllowed) : undefined,
+      hotelNoPetsPreferences: hotelNoPetsPreferences !== undefined ? Boolean(hotelNoPetsPreferences) : undefined,
+      hotelPetsNotAllowed: hotelPetsNotAllowed !== undefined ? Boolean(hotelPetsNotAllowed) : undefined,
+      hotelLocationFeatureWaterView: hotelLocationFeatureWaterView !== undefined ? Boolean(hotelLocationFeatureWaterView) : undefined,
+      hotelLocationFeatureIsland: hotelLocationFeatureIsland !== undefined ? Boolean(hotelLocationFeatureIsland) : undefined,
+      hotelCoffeeBar: hotelCoffeeBar !== undefined ? Boolean(hotelCoffeeBar) : undefined,
     },
   });
 
@@ -1498,22 +1498,22 @@ const updateHotelRoom = async (req: Request) => {
       hotelRoomDescription:
         hotelRoomDescription ?? roomExists.hotelRoomDescription,
       hotelRoomCapacity: hotelRoomCapacity ?? roomExists.hotelRoomCapacity,
-      hotelNumberOfRooms: hotelNumberOfRooms
+      hotelNumberOfRooms: hotelNumberOfRooms !== undefined
         ? parseInt(hotelNumberOfRooms)
         : roomExists.hotelNumberOfRooms,
-      hotelNumAdults: hotelNumAdults
+      hotelNumAdults: hotelNumAdults !== undefined
         ? parseInt(hotelNumAdults)
         : roomExists.hotelNumAdults,
-      hotelNumChildren: hotelNumChildren
+      hotelNumChildren: hotelNumChildren !== undefined
         ? parseInt(hotelNumChildren)
         : roomExists.hotelNumChildren,
-      hotelRoomPriceNight: hotelRoomPriceNight
+      hotelRoomPriceNight: hotelRoomPriceNight !== undefined
         ? parseFloat(hotelRoomPriceNight)
         : roomExists.hotelRoomPriceNight,
       hotelRating: hotelRating ?? roomExists.hotelRating,
       category: category ?? roomExists.category,
-      discount: discount ? parseInt(discount) : roomExists.discount,
-      hotelReviewCount: hotelReviewCount
+      discount: discount !== undefined ? parseInt(discount) : roomExists.discount,
+      hotelReviewCount: hotelReviewCount !== undefined
         ? parseInt(hotelReviewCount)
         : roomExists.hotelReviewCount,
       hotelRoomImages: roomImageUrls,
