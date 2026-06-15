@@ -9,10 +9,42 @@ import { filterField } from "./user.constant";
 import { paginationFields } from "../../../constants/pagination";
 import { IUploadedFile } from "../../../interfaces/file";
 import { cacheManager } from "../../utils/cache";
+import ApiError from "../../../errors/ApiErrors";
+import { UserRole, UserStatus } from "@prisma/client";
 
 // create user
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const userData = req.body;
+
+  if (userData.role === UserRole.BUSINESS_PARTNER) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Service provider account cannot be created with this API"
+    );
+  }
+
+  // Force default status/role for user registration
+  userData.role = UserRole.USER;
+  userData.status = UserStatus.INACTIVE;
+
+  const result = await UserService.createUser(userData);
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "OTP generated and sent to email successfully",
+    data: result,
+  });
+});
+
+// create partner
+const createPartner = catchAsync(async (req: Request, res: Response) => {
+  const userData = req.body;
+
+  // Enforce BUSINESS_PARTNER role and INACTIVE status on the backend
+  userData.role = UserRole.BUSINESS_PARTNER;
+  userData.status = UserStatus.INACTIVE;
+
   const result = await UserService.createUser(userData);
 
   sendResponse(res, {
@@ -344,6 +376,7 @@ const updateAdminAccess = catchAsync(
 
 export const UserController = {
   createUser,
+  createPartner,
   createRoleSupperAdmin,
   verifyOtpAndCreateUser,
   getAllUsers,

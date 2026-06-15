@@ -82,7 +82,7 @@ router.post(
 router.post(
   "/partner",
   validateRequest(userValidation.createUserZodSchema),
-  UserController.createUser
+  UserController.createPartner
 );
 
 // create role for supper admin
