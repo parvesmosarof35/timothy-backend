@@ -53,6 +53,22 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+// Request and Payload Logger Middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.originalUrl !== "/api/v1/system/stats") {
+    console.log(`\n[${new Date().toLocaleString()}] API Hit: ${req.method} ${req.originalUrl}`);
+    if (Object.keys(req.query).length > 0) {
+      console.log(`Query Params:`, JSON.stringify(req.query, null, 2));
+    }
+    if (req.body && Object.keys(req.body).length > 0) {
+      const sanitizedBody = { ...req.body };
+      if (sanitizedBody.password) sanitizedBody.password = "********";
+      console.log(`Payload:`, JSON.stringify(sanitizedBody, null, 2));
+    }
+  }
+  next();
+});
+
 // Request Tracker Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
