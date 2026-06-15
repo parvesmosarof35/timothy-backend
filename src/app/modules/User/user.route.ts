@@ -78,6 +78,13 @@ router.post(
   UserController.createUser
 );
 
+// create partner
+router.post(
+  "/partner",
+  validateRequest(userValidation.createUserZodSchema),
+  UserController.createUser
+);
+
 // create role for supper admin
 router.post(
   "/add-role",
@@ -88,6 +95,9 @@ router.post(
 
 // verify user
 router.post("/verify-user", UserController.verifyOtpAndCreateUser);
+
+// verify partner
+router.post("/verify-partner", UserController.verifyOtpAndCreateUser);
 
 // update partner status (inactive to active)
 router.patch(

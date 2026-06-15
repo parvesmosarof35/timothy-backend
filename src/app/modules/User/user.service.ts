@@ -131,7 +131,10 @@ const verifyOtpAndCreateUser = async (email: string, otp: string) => {
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
-      status: UserStatus.ACTIVE,
+      status:
+        user.role === UserRole.BUSINESS_PARTNER
+          ? UserStatus.INACTIVE
+          : UserStatus.ACTIVE,
       isEmailVerified: true,
       otp: null,
       otpExpiry: null,
