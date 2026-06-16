@@ -1292,24 +1292,6 @@ const updateSecurityProtocol = async (req: Request) => {
   const logoFile = files?.businessLogo?.[0];
   const docsFiles = files?.securityDocs || [];
 
-  // upload logo
-  let businessLogo = existingProtocol.businessLogo;
-  if (logoFile) {
-    const logoResult = await uploadFile.uploadToCloudinary(logoFile);
-    businessLogo = logoResult?.secure_url || businessLogo;
-  }
-
-  // upload docs
-  let securityDocUrls = existingProtocol.securityDocs || [];
-  if (docsFiles.length > 0) {
-    const docUploads = await Promise.all(
-      docsFiles.map((file) =>
-        uploadFile.uploadToCloudinary(file).then((res) => res?.secure_url || "")
-      )
-    );
-    securityDocUrls = [...securityDocUrls, ...docUploads];
-  }
-
   const {
     securityBusinessName,
     securityName,
@@ -1323,7 +1305,35 @@ const updateSecurityProtocol = async (req: Request) => {
     securityProtocolType,
     securityBookingCondition,
     securityCancelationPolicy,
+    businessLogo: logoUrlFromMainBody,
+    securityDocs: docsUrlFromMainBody,
   } = req.body;
+
+  // upload logo
+  let businessLogo = existingProtocol.businessLogo;
+  if (logoFile) {
+    const logoResult = await uploadFile.uploadToCloudinary(logoFile);
+    businessLogo = logoResult?.secure_url || businessLogo;
+  } else if (logoUrlFromMainBody) {
+    businessLogo = logoUrlFromMainBody;
+  }
+
+  // upload docs
+  let securityDocUrls = existingProtocol.securityDocs || [];
+  if (docsUrlFromMainBody !== undefined) {
+    securityDocUrls = Array.isArray(docsUrlFromMainBody)
+      ? docsUrlFromMainBody
+      : [docsUrlFromMainBody];
+  }
+
+  if (docsFiles.length > 0) {
+    const docUploads = await Promise.all(
+      docsFiles.map((file) =>
+        uploadFile.uploadToCloudinary(file).then((res) => res?.secure_url || "")
+      )
+    );
+    securityDocUrls = [...securityDocUrls, ...docUploads];
+  }
 
   const updatedProtocol = await prisma.security_Protocol.update({
     where: { id: securityId },
@@ -1390,17 +1400,6 @@ const updateSecurityProtocolGuardType = async (req: Request) => {
 
   const securityFiles = files?.securityImages || [];
 
-  // upload images
-  let securityImageUrls = existingGuard.securityImages || [];
-  if (securityFiles.length > 0) {
-    const uploaded = await Promise.all(
-      securityFiles.map((file) =>
-        uploadFile.uploadToCloudinary(file).then((res) => res?.secure_url || "")
-      )
-    );
-    securityImageUrls = [...securityImageUrls, ...uploaded];
-  }
-
   const {
     securityGuardName,
     securityAddress,
@@ -1423,7 +1422,25 @@ const updateSecurityProtocolGuardType = async (req: Request) => {
     hiredCount,
     securityBookingAbleDays,
     currency,
+    securityImages: imagesUrlFromMainBody,
   } = req.body;
+
+  // upload images
+  let securityImageUrls = existingGuard.securityImages || [];
+  if (imagesUrlFromMainBody !== undefined) {
+    securityImageUrls = Array.isArray(imagesUrlFromMainBody)
+      ? imagesUrlFromMainBody
+      : [imagesUrlFromMainBody];
+  }
+
+  if (securityFiles.length > 0) {
+    const uploaded = await Promise.all(
+      securityFiles.map((file) =>
+        uploadFile.uploadToCloudinary(file).then((res) => res?.secure_url || "")
+      )
+    );
+    securityImageUrls = [...securityImageUrls, ...uploaded];
+  }
 
   // normalize arrays
   const parsedServices = Array.isArray(securityServicesOffered)
@@ -1471,7 +1488,7 @@ const updateSecurityProtocolGuardType = async (req: Request) => {
       securityBookingAbleDays:
         securityBookingAbleDay || existingGuard.securityBookingAbleDays,
       securityImages: securityImageUrls,
-      currency: currency.toUpperCase(),
+      currency: currency ? currency.toUpperCase() : existingGuard.currency,
     },
   });
 

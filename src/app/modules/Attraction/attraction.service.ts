@@ -922,27 +922,6 @@ const updateAttraction = async (req: Request) => {
 
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-  // Upload new logo (if provided)
-  let businessLogo = attractionExists.businessLogo;
-  const attractionBusinessLogoFile = files?.attractionBusinessLogo?.[0];
-  if (attractionBusinessLogoFile) {
-    const logoResult = await uploadFile.uploadToCloudinary(
-      attractionBusinessLogoFile
-    );
-    businessLogo = logoResult?.secure_url || businessLogo;
-  }
-
-  // Upload new docs (if provided)
-  let attractionDocs = attractionExists.attractionDocs;
-  const attractionDocsFiles = files?.attractionDocs || [];
-  if (attractionDocsFiles.length) {
-    attractionDocs = (
-      await Promise.all(
-        attractionDocsFiles.map((f) => uploadFile.uploadToCloudinary(f))
-      )
-    ).map((img) => img?.secure_url || "");
-  }
-
   const {
     attractionBusinessName,
     attractionName,
@@ -955,24 +934,55 @@ const updateAttraction = async (req: Request) => {
     attractionBusinessDescription,
     attractionBookingCondition,
     attractionCancelationPolicy,
+    businessLogo: logoUrlFromMainBody,
+    attractionDocs: docsUrlFromMainBody,
   } = req.body;
+
+  // Upload new logo (if provided)
+  let businessLogo = attractionExists.businessLogo;
+  const attractionBusinessLogoFile = files?.businessLogo?.[0];
+  if (attractionBusinessLogoFile) {
+    const logoResult = await uploadFile.uploadToCloudinary(
+      attractionBusinessLogoFile
+    );
+    businessLogo = logoResult?.secure_url || businessLogo;
+  } else if (logoUrlFromMainBody) {
+    businessLogo = logoUrlFromMainBody;
+  }
+
+  // Upload new docs (if provided)
+  let attractionDocs = attractionExists.attractionDocs || [];
+  if (docsUrlFromMainBody !== undefined) {
+    attractionDocs = Array.isArray(docsUrlFromMainBody)
+      ? docsUrlFromMainBody
+      : [docsUrlFromMainBody];
+  }
+
+  const attractionDocsFiles = files?.attractionDocs || [];
+  if (attractionDocsFiles.length > 0) {
+    const uploads = await Promise.all(
+      attractionDocsFiles.map((f) => uploadFile.uploadToCloudinary(f))
+    );
+    const newDocUrls = uploads.map((img) => img?.secure_url || "");
+    attractionDocs = [...attractionDocs, ...newDocUrls];
+  }
 
   // update attraction
   const updatedAttraction = await prisma.attraction.update({
     where: { id: attractionId },
     data: {
-      attractionBusinessName,
-      attractionName,
-      attractionBusinessType,
-      attractionRegNum,
-      attractionRegDate,
-      attractionPhone,
-      attractionEmail,
+      attractionBusinessName: attractionBusinessName || attractionExists.attractionBusinessName,
+      attractionName: attractionName || attractionExists.attractionName,
+      attractionBusinessType: attractionBusinessType || attractionExists.attractionBusinessType,
+      attractionRegNum: attractionRegNum || attractionExists.attractionRegNum,
+      attractionRegDate: attractionRegDate || attractionExists.attractionRegDate,
+      attractionPhone: attractionPhone || attractionExists.attractionPhone,
+      attractionEmail: attractionEmail || attractionExists.attractionEmail,
       businessLogo,
-      attractionBusinessTagline,
-      attractionBusinessDescription,
-      attractionBookingCondition,
-      attractionCancelationPolicy,
+      attractionBusinessTagline: attractionBusinessTagline || attractionExists.attractionBusinessTagline,
+      attractionBusinessDescription: attractionBusinessDescription || attractionExists.attractionBusinessDescription,
+      attractionBookingCondition: attractionBookingCondition || attractionExists.attractionBookingCondition,
+      attractionCancelationPolicy: attractionCancelationPolicy || attractionExists.attractionCancelationPolicy,
       attractionDocs,
     },
   });
@@ -1004,15 +1014,6 @@ const updateAttractionAppeal = async (req: Request) => {
 
   const attractionImageFiles = files?.attractionImages || [];
 
-  // upload new images if any
-  const newAttractionImages = attractionImageFiles.length
-    ? (
-        await Promise.all(
-          attractionImageFiles.map((f) => uploadFile.uploadToCloudinary(f))
-        )
-      ).map((img) => img?.secure_url || "")
-    : [];
-
   const {
     attractionDestinationType,
     attractionDescription,
@@ -1035,11 +1036,30 @@ const updateAttractionAppeal = async (req: Request) => {
     discount,
     schedules, // [{ day, slots:[{from,to}] }]
     currency,
+    attractionImages: imagesUrlFromMainBody,
   } = req.body;
+
+  // upload new images if any
+  let newAttractionImages = appealExists.attractionImages || [];
+  if (imagesUrlFromMainBody !== undefined) {
+    newAttractionImages = Array.isArray(imagesUrlFromMainBody)
+      ? imagesUrlFromMainBody
+      : [imagesUrlFromMainBody];
+  }
+
+  if (attractionImageFiles.length > 0) {
+    const uploaded = await Promise.all(
+      attractionImageFiles.map((f) => uploadFile.uploadToCloudinary(f))
+    );
+    const uploadedUrls = uploaded.map((img) => img?.secure_url || "");
+    newAttractionImages = [...newAttractionImages, ...uploadedUrls];
+  }
 
   // convert schedules if string
   const scheduleData =
-    typeof schedules === "string" ? JSON.parse(schedules) : schedules;
+    schedules !== undefined
+      ? (typeof schedules === "string" ? JSON.parse(schedules) : schedules)
+      : undefined;
 
   // transaction for safety
   const updatedAppeal = await prisma.$transaction(
@@ -1048,62 +1068,64 @@ const updateAttractionAppeal = async (req: Request) => {
       const appeal = await tx.appeal.update({
         where: { id: appealId },
         data: {
-          attractionDestinationType,
-          attractionDescription,
-          attractionAddress,
-          attractionCity,
-          attractionPostalCode,
-          attractionDistrict,
-          attractionCountry,
-          attractionImages: newAttractionImages.length
-            ? newAttractionImages
-            : appealExists.attractionImages,
-          attractionServicesOffered: Array.isArray(attractionServicesOffered)
-            ? attractionServicesOffered
-            : attractionServicesOffered?.split(","),
-          attractionFreeWifi: Boolean(attractionFreeWifi),
-          attractionFreeParking: Boolean(attractionFreeParking),
-          attractionKitchen: Boolean(attractionKitchen),
-          attractionTv: Boolean(attractionTv),
-          attractionAirConditioning: Boolean(attractionAirConditioning),
-          attractionPool: Boolean(attractionPool),
-          attractionRating,
-          attractionAdultPrice: parseFloat(attractionAdultPrice),
-          attractionChildPrice: parseFloat(attractionChildPrice),
-          category,
-          discount: parseFloat(discount),
-          currency: currency.toUpperCase(),
+          attractionDestinationType: attractionDestinationType || appealExists.attractionDestinationType,
+          attractionDescription: attractionDescription || appealExists.attractionDescription,
+          attractionAddress: attractionAddress || appealExists.attractionAddress,
+          attractionCity: attractionCity || appealExists.attractionCity,
+          attractionPostalCode: attractionPostalCode || appealExists.attractionPostalCode,
+          attractionDistrict: attractionDistrict || appealExists.attractionDistrict,
+          attractionCountry: attractionCountry || appealExists.attractionCountry,
+          attractionImages: newAttractionImages,
+          attractionServicesOffered: attractionServicesOffered
+            ? (Array.isArray(attractionServicesOffered)
+              ? attractionServicesOffered
+              : attractionServicesOffered.split(",").map((s: string) => s.trim()))
+            : appealExists.attractionServicesOffered,
+          attractionFreeWifi: attractionFreeWifi !== undefined ? Boolean(attractionFreeWifi) : appealExists.attractionFreeWifi,
+          attractionFreeParking: attractionFreeParking !== undefined ? Boolean(attractionFreeParking) : appealExists.attractionFreeParking,
+          attractionKitchen: attractionKitchen !== undefined ? Boolean(attractionKitchen) : appealExists.attractionKitchen,
+          attractionTv: attractionTv !== undefined ? Boolean(attractionTv) : appealExists.attractionTv,
+          attractionAirConditioning: attractionAirConditioning !== undefined ? Boolean(attractionAirConditioning) : appealExists.attractionAirConditioning,
+          attractionPool: attractionPool !== undefined ? Boolean(attractionPool) : appealExists.attractionPool,
+          attractionRating: attractionRating || appealExists.attractionRating,
+          attractionAdultPrice: attractionAdultPrice !== undefined ? parseFloat(attractionAdultPrice) : appealExists.attractionAdultPrice,
+          attractionChildPrice: attractionChildPrice !== undefined ? parseFloat(attractionChildPrice) : appealExists.attractionChildPrice,
+          category: category || appealExists.category,
+          discount: discount !== undefined ? parseFloat(discount) : appealExists.discount,
+          currency: currency ? currency.toUpperCase() : appealExists.currency,
         },
       });
 
-      // delete old schedules and slots
-      await tx.scheduleSlot.deleteMany({ where: { appealId } });
-      await tx.attractionSchedule.deleteMany({ where: { appealId } });
+      // delete old schedules and slots ONLY IF schedules is provided
+      if (schedules !== undefined) {
+        await tx.scheduleSlot.deleteMany({ where: { appealId } });
+        await tx.attractionSchedule.deleteMany({ where: { appealId } });
 
-      // re-insert schedules & slots
-      for (const schedule of scheduleData || []) {
-        const attractionSchedule = await tx.attractionSchedule.create({
-          data: {
-            appealId: appeal.id,
-            day: schedule.day,
-          },
-        });
-
-        const uniqueSlots = Array.from(
-          new Map(
-            schedule.slots.map((s: any) => [`${s.from}-${s.to}`, s])
-          ).values()
-        ) as ISlot[];
-
-        if (uniqueSlots.length > 0) {
-          await tx.scheduleSlot.createMany({
-            data: uniqueSlots.map((slot: ISlot) => ({
+        // re-insert schedules & slots
+        for (const schedule of scheduleData || []) {
+          const attractionSchedule = await tx.attractionSchedule.create({
+            data: {
               appealId: appeal.id,
-              attractionScheduleId: attractionSchedule.id,
-              from: slot.from,
-              to: slot.to,
-            })),
+              day: schedule.day,
+            },
           });
+
+          const uniqueSlots = Array.from(
+            new Map(
+              schedule.slots.map((s: any) => [`${s.from}-${s.to}`, s])
+            ).values()
+          ) as ISlot[];
+
+          if (uniqueSlots.length > 0) {
+            await tx.scheduleSlot.createMany({
+              data: uniqueSlots.map((slot: ISlot) => ({
+                appealId: appeal.id,
+                attractionScheduleId: attractionSchedule.id,
+                from: slot.from,
+                to: slot.to,
+              })),
+            });
+          }
         }
       }
 

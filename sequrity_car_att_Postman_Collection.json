@@ -1,0 +1,636 @@
+{
+	"info": {
+		"_postman_id": "aa301bb2-2b09-49c7-a02b-9d2566af3e42",
+		"name": "Timothy Backend - Security, Cars & Attractions API",
+		"description": "Postman collection for creating and updating Security Protocols, Car Rentals, and Attractions profiles and their nested types in the Timothy Backend system.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Security Protocols",
+			"item": [
+				{
+					"name": "Create Security Protocol",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityBusinessName\": \"Timothy Security Services Ltd\",\n    \"securityName\": \"Timothy Guard Services\",\n    \"securityBusinessType\": \"Private Security Agency\",\n    \"securityRegNum\": \"SEC-1122334\",\n    \"securityRegDate\": \"2026-03-12\",\n    \"securityPhone\": \"+1-555-0800\",\n    \"securityEmail\": \"info@timothysecurity.com\",\n    \"securityTagline\": \"Your safety, our command\",\n    \"securityProtocolDescription\": \"Providing armed VIP protection, corporate bodyguards, event security management, and physical property protection services.\",\n    \"securityProtocolType\": \"Physical Protection\",\n    \"securityBookingCondition\": \"Minimum 24 hours notice is required for scheduling guard services.\",\n    \"securityCancelationPolicy\": \"Free cancellation up to 24 hours before guard deployment.\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Upload a single business logo image (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 1.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "securityDocs",
+									"description": "Upload up to 5 license/documentation files (MIME: PDF, DOCX, ZIP, etc.). MaxCount: 5.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/security-protocols",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"security-protocols"
+							]
+						},
+						"description": "Creates a new Security Protocol profile. Requires BUSINESS_PARTNER role. The partner user must not provide any other services already (Hotel, Car, or Attraction). Sets `isSecurity` to true on successful creation."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Security Guard Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityGuardName\": \"VIP Armed Close Protection Officer\",\n    \"securityAddress\": \"12 Security Plaza\",\n    \"securityCity\": \"Los Angeles\",\n    \"securityPostalCode\": \"90012\",\n    \"securityDistrict\": \"Los Angeles County\",\n    \"securityCountry\": \"United States\",\n    \"securityGuardDescription\": \"Experienced armed VIP bodyguard specialized in diplomatic and high-profile client protection.\",\n    \"securityServicesOffered\": \"VIP Protection, Threat Assessment, Secure Transport\",\n    \"experience\": 6,\n    \"availability\": \"24/7\",\n    \"languages\": \"English, Spanish\",\n    \"certification\": \"State Guard Card, Active Firearm Permit\",\n    \"securityPriceDay\": 350.00,\n    \"category\": \"VIP\",\n    \"discount\": 25,\n    \"securityBookingAbleDays\": \"Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday\",\n    \"currency\": \"USD\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "securityImages",
+									"description": "Upload multiple guard reference/action images (MIME: JPEG, PNG, etc.). MaxCount: 40.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/security-protocols/security-guard-type/:securityId",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guard-type",
+								":securityId"
+							],
+							"variable": [
+								{
+									"key": "securityId",
+									"value": "6918e333c17c4e67050efc60",
+									"description": "The ID of the security protocol this guard type belongs to."
+								}
+							]
+						},
+						"description": "Creates a new Security Guard Type under a specific Security Protocol. Requires BUSINESS_PARTNER role. Parses comma-separated values (services, languages, able-days) and safely handles default parameters."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Security Protocol",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityName\": \"Timothy Tactical Guard Services (Renovated)\",\n    \"securityTagline\": \"Premium class protection and absolute peace of mind\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Optionally upload a new logo to replace the current one.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "securityDocs",
+									"description": "Optionally upload new docs.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/:securityId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								":securityId"
+							],
+							"variable": [
+								{
+									"key": "securityId",
+									"value": "68dc2240e3d97ba02e79c2d3",
+									"description": "The ID of the security protocol to be updated."
+								}
+							]
+						},
+						"description": "Updates an existing Security Protocol profile. Requires BUSINESS_PARTNER role and must be owned by the authenticated partner."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Security Guard Type",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"securityGuardName\": \"VIP Armed Close Protection Officer (Executive Tier)\",\n    \"securityPriceDay\": 390.00,\n    \"experience\": 8,\n    \"currency\": \"USD\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "securityImages",
+									"description": "Optionally upload new images to append.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/security-protocols/security-guard-type/:guardId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security-protocols",
+								"security-guard-type",
+								":guardId"
+							],
+							"variable": [
+								{
+									"key": "guardId",
+									"value": "68dc3b93e42610b2416b0db7",
+									"description": "The ID of the security guard to update."
+								}
+							]
+						},
+						"description": "Updates an existing Security Guard. Requires BUSINESS_PARTNER role and must own the guard profile."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Car Rentals",
+			"item": [
+				{
+					"name": "Create Car Rental",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"carBusinessName\": \"Timothy Premium Car Rental Ltd\",\n    \"carName\": \"Timothy Cars\",\n    \"carBusinessType\": \"Limo & Premium Car Rental\",\n    \"carRegNum\": \"CAR-8877665\",\n    \"carRegDate\": \"2026-04-10\",\n    \"carPhone\": \"+1-555-0909\",\n    \"carEmail\": \"rentals@timothycars.com\",\n    \"carTagline\": \"Drive the luxury you deserve\",\n    \"carRentalDescription\": \"High-end luxury cars, sports cars, SUVs, and professional chauffeur services.\",\n    \"carBookingCondition\": \"Valid international driver license and credit card for security deposit required.\",\n    \"carCancelationPolicy\": \"Free cancellation up to 48 hours before the scheduled rental time.\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Upload a single business logo image (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 1.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "carDocs",
+									"description": "Upload up to 5 license/documentation files (MIME: PDF, DOCX, ZIP, etc.). MaxCount: 5.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/car-rentals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"car-rentals"
+							]
+						},
+						"description": "Creates a new Car Rental profile. Requires BUSINESS_PARTNER role. The partner user must not provide any other services already (Hotel, Security, or Attraction). Sets `isCar` to true on successful creation."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Car",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"carAddress\": \"55 Boulevard Way\",\n    \"carPostalCode\": \"90210\",\n    \"carDistrict\": \"Beverly Hills\",\n    \"carCity\": \"Los Angeles\",\n    \"carCountry\": \"United States\",\n    \"carDescription\": \"Tesla Model S Plaid in flawless black, fully loaded with autopilot capability.\",\n    \"carServicesOffered\": \"Chauffeur Service, Airport Pick-up, GPS Navigation\",\n    \"carType\": \"Sedan\",\n    \"carSeats\": \"5\",\n    \"carOilType\": \"Electric\",\n    \"carEngineType\": \"Dual Motor AWD\",\n    \"carTransmission\": \"Automatic\",\n    \"carPower\": \"1020 hp\",\n    \"carDrivetrain\": \"AWD\",\n    \"carMileage\": \"12000\",\n    \"carModel\": \"Tesla Model S Plaid\",\n    \"carCapacity\": \"5 Adults\",\n    \"carColor\": \"Black\",\n    \"fuelType\": \"Electric\",\n    \"gearType\": \"Automatic\",\n    \"carRating\": \"5.0\",\n    \"carPriceDay\": 220.00,\n    \"category\": \"Luxury\",\n    \"discount\": 20,\n    \"carBookingAbleDays\": \"Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday\",\n    \"currency\": \"USD\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "carImages",
+									"description": "Upload multiple car images (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 40.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/car-rentals/car/:carRentalId",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"car-rentals",
+								"car",
+								":carRentalId"
+							],
+							"variable": [
+								{
+									"key": "carRentalId",
+									"value": "68f16c02ef9dbb810f5475bf",
+									"description": "The ID of the car rental business profile this car belongs to."
+								}
+							]
+						},
+						"description": "Creates a new Car under a specific Car Rental business profile. Requires BUSINESS_PARTNER role."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Car Rental",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"carName\": \"Timothy Executive Cars\",\n    \"carTagline\": \"Arrive in absolute luxury and class\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Optionally upload a new logo to replace the current one.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "carDocs",
+									"description": "Optionally upload new docs.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/car-rentals/:carRentalId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"car-rentals",
+								":carRentalId"
+							],
+							"variable": [
+								{
+									"key": "carRentalId",
+									"value": "68dd96ab35ba81d9a37b79d2",
+									"description": "The ID of the car rental business profile to update."
+								}
+							]
+						},
+						"description": "Updates an existing Car Rental business profile. Requires BUSINESS_PARTNER role and ownership."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Car",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"carDescription\": \"Tesla Model S Plaid in flawless black, updated with premium FSD capabilities.\",\n    \"carPriceDay\": 250.00,\n    \"discount\": 30,\n    \"currency\": \"USD\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "carImages",
+									"description": "Optionally upload new images to append.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/car-rentals/car/:carId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"car-rentals",
+								"car",
+								":carId"
+							],
+							"variable": [
+								{
+									"key": "carId",
+									"value": "68ddb80b861e187a6a6095e3",
+									"description": "The ID of the car to update."
+								}
+							]
+						},
+						"description": "Updates an existing car profile. Requires BUSINESS_PARTNER role and ownership."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Attractions",
+			"item": [
+				{
+					"name": "Create Attraction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"attractionBusinessName\": \"Timothy Adventures & Tours\",\n    \"attractionName\": \"Timothy Adventures\",\n    \"attractionBusinessType\": \"Eco-Adventure Park Operator\",\n    \"attractionRegNum\": \"ATT-9900112\",\n    \"attractionRegDate\": \"2026-05-18\",\n    \"attractionPhone\": \"+1-555-1212\",\n    \"attractionEmail\": \"adventures@timothyattractions.com\",\n    \"attractionBusinessTagline\": \"Memories that last a lifetime\",\n    \"attractionBusinessDescription\": \"Curating incredible guided tours, zip-lines, local wildlife excursions, and nature trails.\",\n    \"attractionBookingCondition\": \"Advance slots reservation mandatory. Minimum age requirement for certain trails is 12.\",\n    \"attractionCancelationPolicy\": \"Full refund if cancelled 24 hours prior to slot start time.\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Upload a single business logo image (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 1.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "attractionDocs",
+									"description": "Upload up to 5 license/documentation files (MIME: PDF, DOCX, ZIP, etc.). MaxCount: 5.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/attractions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"attractions"
+							]
+						},
+						"description": "Creates a new Attraction business profile. Requires BUSINESS_PARTNER role. The partner user must not provide any other services already (Hotel, Security, or Car). Sets `isAttraction` to true on successful creation."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Attraction Appeal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"attractionDestinationType\": \"Theme Park / Nature Trail\",\n    \"attractionDescription\": \"Guided zipline adventure and scenic forest walk with stunning panoramic views.\",\n    \"attractionAddress\": \"88 Forest Ridge Trail\",\n    \"attractionCity\": \"Seattle\",\n    \"attractionPostalCode\": \"98101\",\n    \"attractionDistrict\": \"King County\",\n    \"attractionCountry\": \"United States\",\n    \"attractionFreeWifi\": true,\n    \"attractionFreeParking\": true,\n    \"attractionKitchen\": false,\n    \"attractionTv\": false,\n    \"attractionAirConditioning\": false,\n    \"attractionPool\": true,\n    \"attractionServicesOffered\": \"Guided Zipline Tour, Safety Gear, Refreshments\",\n    \"attractionRating\": \"4.8\",\n    \"attractionAdultPrice\": 65.00,\n    \"attractionChildPrice\": 40.00,\n    \"category\": \"Adventure\",\n    \"discount\": 5.00,\n    \"currency\": \"USD\",\n    \"schedules\": [\n        {\n            \"day\": \"Saturday\",\n            \"slots\": [\n                { \"from\": \"09:00:00\", \"to\": \"12:00:00\" },\n                { \"from\": \"13:00:00\", \"to\": \"16:00:00\" }\n            ]\n        },\n        {\n            \"day\": \"Sunday\",\n            \"slots\": [\n                { \"from\": \"10:00:00\", \"to\": \"13:00:00\" }\n            ]\n        }\n    ]\n}",
+									"type": "text"
+								},
+								{
+									"key": "attractionImages",
+									"description": "Upload multiple attraction images (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 40.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/attractions/appeal/:attractionId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"attractions",
+								"appeal",
+								":attractionId"
+							],
+							"variable": [
+								{
+									"key": "attractionId",
+									"value": "68df04383c3cf2bcfca3eb2a",
+									"description": "The ID of the attraction business profile this appeal belongs to."
+								}
+							]
+						},
+						"description": "Creates a new Attraction Appeal under a specific Attraction business profile. Requires BUSINESS_PARTNER role. Sets schedules and slots."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Attraction",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"attractionName\": \"Timothy Adventures & Scenic Tours\",\n    \"attractionBusinessTagline\": \"Extraordinary adventures, unforgettable memories\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Optionally upload a new logo to replace the current one.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "attractionDocs",
+									"description": "Optionally upload new docs.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostUrl}}/attractions/:attractionId",
+							"host": [
+								"{{hostUrl}}"
+							],
+							"path": [
+								"attractions",
+								":attractionId"
+							],
+							"variable": [
+								{
+									"key": "attractionId",
+									"value": "68df04383c3cf2bcfca3eb2a",
+									"description": "The ID of the attraction business profile to update."
+								}
+							]
+						},
+						"description": "Updates an existing Attraction business profile. Requires BUSINESS_PARTNER role and ownership."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Attraction Appeal",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"attractionDescription\": \"Guided zipline adventure and scenic forest walk with updated twilight zip hours.\",\n    \"attractionAdultPrice\": 70.00,\n    \"discount\": 8.00,\n    \"currency\": \"USD\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "attractionImages",
+									"description": "Optionally upload new images to append.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/attractions/appeal/:appealId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"attractions",
+								"appeal",
+								":appealId"
+							],
+							"variable": [
+								{
+									"key": "appealId",
+									"value": "68df096f34c21bb4f60ae02b",
+									"description": "The ID of the attraction appeal to update."
+								}
+							]
+						},
+						"description": "Updates an existing Attraction Appeal profile. Requires BUSINESS_PARTNER role and ownership. Safe from schedule wipes if schedules is not passed."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5005/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "hostUrl",
+			"value": "http://localhost:5005/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "partnerToken",
+			"value": "YOUR_PARTNER_JWT_TOKEN",
+			"type": "string"
+		}
+	]
+}

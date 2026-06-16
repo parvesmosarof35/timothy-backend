@@ -46,6 +46,10 @@ export type SafeUser = {
   role: UserRole;
   fcmToken: string | null;
   status: UserStatus;
+  isHotel?: boolean;
+  isSecurity?: boolean;
+  isCar?: boolean;
+  isAttraction?: boolean;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -784,22 +784,6 @@ const updateCarRental = async (req: Request) => {
   const carLogoFile = files?.businessLogo?.[0];
   const carDocsFiles = files?.carDocs || [];
 
-  // upload logo if provided
-  let businessLogo = carRentalExists.businessLogo;
-  if (carLogoFile) {
-    const logoResult = await uploadFile.uploadToCloudinary(carLogoFile);
-    businessLogo = logoResult?.secure_url || businessLogo;
-  }
-
-  // upload docs if provided
-  let carDocUrls = carRentalExists.carDocs || [];
-  if (carDocsFiles.length > 0) {
-    const uploads = await Promise.all(
-      carDocsFiles.map((file) => uploadFile.uploadToCloudinary(file))
-    );
-    carDocUrls = uploads.map((img) => img?.secure_url || "");
-  }
-
   const {
     carBusinessName,
     carName,
@@ -812,7 +796,34 @@ const updateCarRental = async (req: Request) => {
     carRentalDescription,
     carBookingCondition,
     carCancelationPolicy,
+    businessLogo: logoUrlFromMainBody,
+    carDocs: docsUrlFromMainBody,
   } = req.body;
+
+  // upload logo if provided
+  let businessLogo = carRentalExists.businessLogo;
+  if (carLogoFile) {
+    const logoResult = await uploadFile.uploadToCloudinary(carLogoFile);
+    businessLogo = logoResult?.secure_url || businessLogo;
+  } else if (logoUrlFromMainBody) {
+    businessLogo = logoUrlFromMainBody;
+  }
+
+  // upload docs if provided
+  let carDocUrls = carRentalExists.carDocs || [];
+  if (docsUrlFromMainBody !== undefined) {
+    carDocUrls = Array.isArray(docsUrlFromMainBody)
+      ? docsUrlFromMainBody
+      : [docsUrlFromMainBody];
+  }
+
+  if (carDocsFiles.length > 0) {
+    const uploads = await Promise.all(
+      carDocsFiles.map((file) => uploadFile.uploadToCloudinary(file))
+    );
+    const newDocUrls = uploads.map((img) => img?.secure_url || "");
+    carDocUrls = [...carDocUrls, ...newDocUrls];
+  }
 
   return await prisma.car_Rental.update({
     where: { id: car_RentalId },
@@ -857,15 +868,6 @@ const updateCar = async (req: Request) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   const carImageFiles = files?.carImages || [];
 
-  // Upload new images if provided
-  let carImageUrls = carExists.carImages || [];
-  if (carImageFiles.length > 0) {
-    const uploads = await Promise.all(
-      carImageFiles.map((file) => uploadFile.uploadToCloudinary(file))
-    );
-    carImageUrls = uploads.map((img) => img?.secure_url || "");
-  }
-
   const {
     carAddress,
     carPostalCode,
@@ -894,43 +896,64 @@ const updateCar = async (req: Request) => {
     carReviewCount,
     carBookingAbleDays,
     currency,
+    carImages: imagesUrlFromMainBody,
   } = req.body;
+
+  // Upload new images if provided
+  let carImageUrls = carExists.carImages || [];
+  if (imagesUrlFromMainBody !== undefined) {
+    carImageUrls = Array.isArray(imagesUrlFromMainBody)
+      ? imagesUrlFromMainBody
+      : [imagesUrlFromMainBody];
+  }
+
+  if (carImageFiles.length > 0) {
+    const uploads = await Promise.all(
+      carImageFiles.map((file) => uploadFile.uploadToCloudinary(file))
+    );
+    const newCarUrls = uploads.map((img) => img?.secure_url || "");
+    carImageUrls = [...carImageUrls, ...newCarUrls];
+  }
 
   return await prisma.car.update({
     where: { id: carId },
     data: {
-      carAddress,
-      carPostalCode,
-      carDistrict,
-      carCity,
-      carCountry,
-      carDescription,
+      carAddress: carAddress || carExists.carAddress,
+      carPostalCode: carPostalCode || carExists.carPostalCode,
+      carDistrict: carDistrict || carExists.carDistrict,
+      carCity: carCity || carExists.carCity,
+      carCountry: carCountry || carExists.carCountry,
+      carDescription: carDescription || carExists.carDescription,
       carImages: carImageUrls,
-      carServicesOffered: Array.isArray(carServicesOffered)
-        ? carServicesOffered
-        : carServicesOffered?.split(",") || [],
-      carType,
-      carSeats,
-      carOilType,
-      carEngineType,
-      carTransmission,
-      carPower,
-      carDrivetrain,
-      carMileage,
-      carModel,
-      carCapacity,
-      carColor,
-      fuelType,
-      gearType,
-      carRating,
-      carPriceDay: carPriceDay ? parseFloat(carPriceDay) : 0,
-      carBookingAbleDays: Array.isArray(carBookingAbleDays)
-        ? carBookingAbleDays
-        : carBookingAbleDays?.split(",") || [],
-      category,
-      discount: discount ? parseFloat(discount) : 0,
-      carReviewCount: carReviewCount ? parseInt(carReviewCount) : 0,
-      currency: currency.toUpperCase(),
+      carServicesOffered: carServicesOffered
+        ? (Array.isArray(carServicesOffered)
+          ? carServicesOffered
+          : carServicesOffered.split(",").map((s: string) => s.trim()))
+        : carExists.carServicesOffered,
+      carType: carType || carExists.carType,
+      carSeats: carSeats || carExists.carSeats,
+      carOilType: carOilType || carExists.carOilType,
+      carEngineType: carEngineType || carExists.carEngineType,
+      carTransmission: carTransmission || carExists.carTransmission,
+      carPower: carPower || carExists.carPower,
+      carDrivetrain: carDrivetrain || carExists.carDrivetrain,
+      carMileage: carMileage || carExists.carMileage,
+      carModel: carModel || carExists.carModel,
+      carCapacity: carCapacity || carExists.carCapacity,
+      carColor: carColor || carExists.carColor,
+      fuelType: fuelType || carExists.fuelType,
+      gearType: gearType || carExists.gearType,
+      carRating: carRating || carExists.carRating,
+      carPriceDay: carPriceDay ? parseFloat(carPriceDay) : carExists.carPriceDay,
+      carBookingAbleDays: carBookingAbleDays
+        ? (Array.isArray(carBookingAbleDays)
+          ? carBookingAbleDays
+          : carBookingAbleDays.split(",").map((s: string) => s.trim()))
+        : carExists.carBookingAbleDays,
+      category: category || carExists.category,
+      discount: discount ? parseFloat(discount) : carExists.discount,
+      carReviewCount: carReviewCount ? parseInt(carReviewCount) : carExists.carReviewCount,
+      currency: currency ? currency.toUpperCase() : carExists.currency,
     },
   });
 };
