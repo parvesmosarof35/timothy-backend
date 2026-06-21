@@ -3,7 +3,7 @@
 ### API Documentation With Example(Postman) : 
 
 ## Table of Contents
-- [Auth Routes](#auth-route)
+- [Auth Routes](#auth-routess)
 
 
 ## Auth Routes
