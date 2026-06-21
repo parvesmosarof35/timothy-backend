@@ -6,6 +6,113 @@
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+				{
+			"name": "Hotels",
+			"item": [
+				{
+					"name": "Create Hotel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"hotelBusinessName\": \"Timothy Grand Plaza Hotel\",\n    \"hotelName\": \"Timothy Grand Plaza\",\n    \"hotelBusinessType\": \"Resort\",\n    \"hotelRegNum\": \"REG-1029384\",\n    \"hotelRegDate\": \"2026-01-15\",\n    \"hotelPhone\": \"+1-555-0199\",\n    \"hotelEmail\": \"grandplaza@timothy.com\",\n    \"businessTagline\": \"Luxury redefined in the heart of the city\",\n    \"businessDescription\": \"Timothy Grand Plaza is a five-star luxury hotel offering premium accommodation, pool, gym, and full front desk services.\",\n    \"hotelBookingCondition\": \"Non-refundable after 24 hours prior to check-in\",\n    \"hotelCancelationPolicy\": \"100% refund if cancelled 48 hours in advance\",\n    \"hotelLate\": 40.7128,\n    \"hotelLong\": -74.0060,\n    \"hotelAddress\": \"123 Luxury Lane, Manhattan\",\n    \"hotelCity\": \"New York\",\n    \"hotelPostalCode\": \"10001\",\n    \"hotelDistrict\": \"Manhattan\",\n    \"hotelCountry\": \"United States\",\n    \"hotelAC\": true,\n    \"hotelParking\": true,\n    \"hoitelWifi\": true,\n    \"hotelBreakfast\": true,\n    \"hotelPool\": true,\n    \"hotelSmoking\": false,\n    \"hotelTv\": true,\n    \"hotelWashing\": true,\n    \"hotelAccommodationType\": \"Hotel\",\n    \"hotelKitchen\": false,\n    \"hotelRestaurant\": true,\n    \"hotelGym\": true,\n    \"hotelSpa\": true,\n    \"hotel24HourFrontDesk\": true,\n    \"hotelAirportShuttle\": true,\n    \"hotelNoSmokingPreference\": true,\n    \"hotelNoNSmoking\": true,\n    \"hotelPetsAllowed\": false,\n    \"hotelNoPetsPreferences\": true,\n    \"hotelPetsNotAllowed\": true,\n    \"hotelLocationFeatureWaterView\": false,\n    \"hotelLocationFeatureIsland\": false,\n    \"hotelCoffeeBar\": true\n}",
+									"description": "Contains stringified JSON holding all text and boolean metadata fields for the hotel.",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Upload a single business logo image (MIME: JPEG, PNG, WEBP, AVIF). MaxCount: 1.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "hotelDocs",
+									"description": "Upload up to 5 business registration/hotel documentation files (MIME: PDF, DOCX, etc.). MaxCount: 5.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/hotels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels"
+							]
+						},
+						"description": "Creates a new Hotel profile. Requires BUSINESS_PARTNER role. The partner user must not provide any other services already (Security, Car, or Attraction). Sets `isHotel` to true on successful creation."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Hotel",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{partnerToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\n    \"hotelBusinessName\": \"Timothy Grand Plaza Hotel\",\n    \"hotelName\": \"Timothy Grand Plaza (Renovated)\",\n    \"hotelBusinessType\": \"Resort\",\n    \"hotelRegNum\": \"REG-1029384\",\n    \"hotelRegDate\": \"2026-01-15\",\n    \"hotelPhone\": \"+1-555-0199\",\n    \"hotelEmail\": \"grandplaza@timothy.com\",\n    \"businessTagline\": \"Elegant luxury in New York\",\n    \"businessDescription\": \"Timothy Grand Plaza is a five-star luxury hotel offering premium accommodation, pool, gym, and full front desk services.\",\n    \"hotelBookingCondition\": \"Non-refundable after 24 hours prior to check-in\",\n    \"hotelCancelationPolicy\": \"100% refund if cancelled 48 hours in advance\",\n    \"hotelLate\": 40.7128,\n    \"hotelLong\": -74.0060,\n    \"hotelAddress\": \"123 Luxury Lane, Manhattan\",\n    \"hotelCity\": \"New York\",\n    \"hotelPostalCode\": \"10001\",\n    \"hotelDistrict\": \"Manhattan\",\n    \"hotelCountry\": \"United States\",\n    \"hotelAC\": true,\n    \"hotelParking\": true,\n    \"hoitelWifi\": true,\n    \"hotelBreakfast\": true,\n    \"hotelPool\": true,\n    \"hotelSmoking\": false,\n    \"hotelTv\": true,\n    \"hotelWashing\": true,\n    \"hotelAccommodationType\": \"Hotel\",\n    \"hotelKitchen\": false,\n    \"hotelRestaurant\": true,\n    \"hotelGym\": true,\n    \"hotelSpa\": true,\n    \"hotel24HourFrontDesk\": true,\n    \"hotelAirportShuttle\": true,\n    \"hotelNoSmokingPreference\": true,\n    \"hotelNoNSmoking\": true,\n    \"hotelPetsAllowed\": false,\n    \"hotelNoPetsPreferences\": true,\n    \"hotelPetsNotAllowed\": true,\n    \"hotelLocationFeatureWaterView\": false,\n    \"hotelLocationFeatureIsland\": false,\n    \"hotelCoffeeBar\": true\n}",
+									"description": "Pass fields inside this JSON structure to selectively update them.",
+									"type": "text"
+								},
+								{
+									"key": "businessLogo",
+									"description": "Optionally upload a new logo to replace the current one.",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "hotelDocs",
+									"description": "Optionally upload new documents to append or replace current documents.",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/hotels/:hotelId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hotels",
+								":hotelId"
+							],
+							"variable": [
+								{
+									"key": "hotelId",
+									"value": "666dbd8b132e4d0012bcdef1",
+									"description": "The ID of the hotel to be updated."
+								}
+							]
+						},
+						"description": "Updates an existing Hotel profile. Requires BUSINESS_PARTNER role and must be owned by the authenticated partner."
+					},
+					"response": []
+				}
+			]
+		},
 		{
 			"name": "Security Protocols",
 			"item": [
