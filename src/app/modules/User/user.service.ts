@@ -23,6 +23,10 @@ import { Request } from "express";
 import { getDateRange } from "../../../helpars/filterByDate";
 import emailSender from "../../../helpars/emailSender";
 import { createOtpEmailTemplate } from "../../../utils/createOtpEmailTemplate";
+import {
+  createPartnerRegistrationAlertTemplate,
+  createPartnerApprovedTemplate,
+} from "../../../utils/createEmailTemplate";
 
 // create user
 const createUser = async (payload: any) => {
@@ -140,6 +144,25 @@ const verifyOtpAndCreateUser = async (email: string, otp: string) => {
       otpExpiry: null,
     },
   });
+
+  // If business partner successfully registers/verifies, notify Timothy
+  if (updatedUser.role === UserRole.BUSINESS_PARTNER) {
+    if (config.timothy_personal_email) {
+      const emailContent = createPartnerRegistrationAlertTemplate(
+        updatedUser.fullName || "",
+        updatedUser.email
+      );
+      try {
+        await emailSender(
+          "New Business Partner Registration Pending Approval",
+          config.timothy_personal_email,
+          emailContent
+        );
+      } catch (err) {
+        console.error("Failed to send registration notification email to Timothy:", err);
+      }
+    }
+  }
 
   // generate token
   const accessToken = jwtHelpers.generateToken(
@@ -666,6 +689,21 @@ const updatePartnerStatusInActiveToActive = async (id: string) => {
       updatedAt: true,
     },
   });
+
+  // Send approval confirmation email to the partner
+  if (result.email) {
+    const emailContent = createPartnerApprovedTemplate(result.fullName || "");
+    try {
+      await emailSender(
+        "Account Approved From Admin - Welcome to Fasifys!",
+        result.email,
+        emailContent
+      );
+    } catch (err) {
+      console.error("Failed to send approval confirmation email to partner:", err);
+    }
+  }
+
   return result;
 };
 

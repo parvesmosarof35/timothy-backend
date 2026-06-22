@@ -46,6 +46,7 @@ export default {
   },
 
   reset_pass_link: process.env.RESET_PASS_LINK,
+  timothy_personal_email: process.env.TIMOTHY_PERSONAL_EMAIL,
 
   emailSender: {
     email: process.env.EMAIL,
